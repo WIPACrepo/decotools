@@ -34,6 +34,7 @@ def xml_to_dict(xmlfile):
 
 
 def image_file_to_xml_file(image_file):
+    # Some code goes here
     return
 
 
