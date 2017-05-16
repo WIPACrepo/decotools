@@ -125,13 +125,20 @@ def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
         file_list = [f for f in file_list if 'minBias' in f]
 
     # If specified, only keep files with desired phone model(s)
-    if phone_model:
+    if phone_model is not None:
         # Validate phone_model input
         if isinstance(phone_model, str):
             phone_model_list = [phone_model]
         assert isinstance(phone_model_list, (list, tuple, np.ndarray))
 
-        file_list = [f for f in file_list if get_phone_model(f) in phone_model_list]
+        filtered_list = []
+        # Filter out non-matching phone models
+        for idx, f in enumerate(file_list):
+            try:
+                if get_phone_model(f) in phone_model_list: filtered_list.append(f)
+            except:
+                continue
+        file_list = filtered_list
 
     # Cast file_list from a python list to a numpy.ndarray
     file_array = np.asarray(file_list, dtype=str)
