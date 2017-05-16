@@ -35,8 +35,7 @@ def xml_to_dict(xmlfile):
 
 def image_file_to_xml_file(image_file):
     directory, image_file_basename = os.path.split(image_file)
-    xml_file_basename = 'metadata-' + \
-        image_file_basename.replace('.png', '.xml')
+    xml_file_basename = 'metadata-' + image_file_basename.replace('.png', '.xml')
     xml_file = os.path.join(directory, xml_file_basename)
 
     return xml_file
@@ -49,32 +48,44 @@ def get_phone_model(image_file):
     return xml_dict['Model']
 
 
-def get_iOS_files(start_date=None, end_date=None, include_min_bias=False, phone_model=None):
+def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
+                  include_events=True, include_min_bias=False,
+                  phone_model=None):
     '''Function to retrieve deco iOS image files
 
     Parameters
     ----------
     start_date : str, optional
-        Starting date for the iOS files to retrieve. Use any common date format (e.g. '2017-01-01', '20170101', 'Jan 1, 2017', etc).
+        Starting date for the iOS files to retrieve. Use any common
+        date format (e.g. '2017-01-01', '20170101', 'Jan 1, 2017', etc).
+        Default starting date is '2016.01.01'.
     end_date : str, optional
-        Ending date for the iOS files to retrieve. Use any common date format (e.g. '2017-01-01', '20170101', 'Jan 1, 2017', etc). Default is the current date.
+        Ending date for the iOS files to retrieve. Use any common
+        date format (e.g. '2017-01-01', '20170101', 'Jan 1, 2017', etc).
+        Default is the current date.
+    data_dir : str, optional
+        Base directory to search for iOS image files.
+    include_events : bool, optional
+        Option to include images files flagged as events. Default is True.
     include_min_bias : bool, optional
         Option to include minimum bias image files. Default is False.
     phone_model : str or list, optional
-        Option to specify which phone models you would like to look at. Can be either a string, e.g. 'iPhone 7', or a list of models, e.g. ['iPhone 5', 'iPhone 5s']. Default is to include all phone models.
+        Option to specify which phone models you would like to look at.
+        Can be either a string, e.g. 'iPhone 7', or a list of models,
+        e.g. ['iPhone 5', 'iPhone 5s']. Default is to include all
+        phone models.
 
     Returns
     -------
-    np.ndarray
-        Numpy array containing files that match specified criteria (with date range, match phone model(s), etc.)
+    numpy.ndarray
+        Numpy array containing files that match specified criteria
 
     '''
 
-    if isinstance(phone_model, str):
-        phone_model_list = [phone_model]
-
-    base_path = '/net/deco/iOSdata/'
-    file_list = []
+    # Validate include_min_bias and include_events:
+    if not any([include_events, include_min_bias]):
+        raise ValueError('At least one of include_events or include_min_bias '
+                         'must be True.')
 
     # If no end_date specified, set as today's date
     if not end_date:
@@ -92,17 +103,27 @@ def get_iOS_files(start_date=None, end_date=None, include_min_bias=False, phone_
             start_date, end_date))
 
     # Build up list of all image files within the start_date to end_date range
+    file_list = []
     for date in dates:
-        date_files_pattern = os.path.join(base_path, date, '*.png')
+        date_files_pattern = os.path.join(data_dir, date, '*.png')
         date_file_list = glob.glob(date_files_pattern)
         file_list.extend(date_file_list)
 
-    # If specified, remove minimum bias images
-    if not include_min_bias:
+    # If specified, filter out events/minimum bias images appropriately
+    if include_events and include_min_bias:
+        pass
+    elif include_events and not include_min_bias:
         file_list = [f for f in file_list if 'minBias' not in f]
+    elif not include_events and include_min_bias:
+        file_list = [f for f in file_list if 'minBias' in f]
 
     # If specified, only keep files with desired phone model(s)
-    if phone_model_list:
+    if phone_model:
+        # Validate phone_model input
+        if isinstance(phone_model, str):
+            phone_model_list = [phone_model]
+        assert isinstance(phone_model_list, (list, tuple, np.ndarray))
+
         file_list = [f for f in file_list if get_phone_model(f) in phone_model_list]
 
     # Cast file_list from a python list to a numpy.ndarray
