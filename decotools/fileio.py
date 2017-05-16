@@ -44,7 +44,6 @@ def image_file_to_xml_file(image_file):
 def get_phone_model(image_file):
     xml_file = image_file_to_xml_file(image_file)
     xml_dict = xml_to_dict(xml_file)
-    print(xml_dict['Model'])
 
     return xml_dict['Model']
 
