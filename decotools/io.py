@@ -50,7 +50,7 @@ def get_phone_model(image_file):
 
 def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
                   include_events=True, include_min_bias=False,
-                  phone_model=None):
+                  phone_model=None, verbose=0):
     '''Function to retrieve deco iOS image files
 
     Parameters
@@ -74,6 +74,9 @@ def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
         Can be either a string, e.g. 'iPhone 7', or a list of models,
         e.g. ['iPhone 5', 'iPhone 5s']. Default is to include all
         phone models.
+    verbose : int (0 or 1)
+        Option to have verbose output when getting files. Where 0 is
+        least verbose, while 1 is the most verbose.
 
     Returns
     -------
@@ -86,6 +89,10 @@ def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
     if not any([include_events, include_min_bias]):
         raise ValueError('At least one of include_events or include_min_bias '
                          'must be True.')
+    # Validate user input for verbose parameter
+    if not isinstance(verbose, int):
+        raise ValueError('Expecting an int for verbose, '
+                         'got {}'.format(type(verbose)))
 
     # If no end_date specified, set as today's date
     if not end_date:
@@ -128,5 +135,9 @@ def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
 
     # Cast file_list from a python list to a numpy.ndarray
     file_array = np.asarray(file_list, dtype=str)
+
+    # Optional verbose output
+    if verbose:
+        print('Found {} iOS image files'.format(file_array.shape[0]))
 
     return file_array
