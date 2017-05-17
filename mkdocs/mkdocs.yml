@@ -1,7 +1,7 @@
 site_name: decotools
 site_description: DECO toolset
 # site_dir: ../docs
-theme: cinder
+theme_dir: cinder
 pages:
     - Home: index.md
 repo_name: 'GitHub'
