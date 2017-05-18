@@ -4,9 +4,8 @@ Author: James Bourbeau + Mr. Meehan
 '''
 
 from setuptools import setup, find_packages
-import decotools
 
-VERSION = decotools.__version__
+VERSION = '0.0.1'
 
 setup(
     name='decotools',
@@ -15,5 +14,5 @@ setup(
     author='James Bourbeau + Mr. Meehan',
     author_email='jbourbeau@wisc.edu',
     packages=find_packages(),
-    install_requires=['numpy', 'pandas', 'mkdocs', 'mkdocs-cinder']
+    install_requires=['numpy', 'pandas', 'mkdocs', 'mkdocs-cinder', 'pytest']
 )
