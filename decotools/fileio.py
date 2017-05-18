@@ -106,8 +106,7 @@ def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
         dates = pd.date_range(start_date, end_date)
         dates = dates.strftime('%Y.%m.%d')
     except:
-        raise ValueError('Invalid start_date ({}) or end_date ({}) entered'.format(
-            start_date, end_date))
+        raise ValueError('Invalid start_date or end_date entered')
 
     # Build up list of all image files within the start_date to end_date range
     file_list = []
