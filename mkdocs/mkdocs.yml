@@ -1,0 +1,16 @@
+site_name: decotools
+site_description: DECO toolset
+site_dir: ../docs
+theme_dir: cinder
+pages:
+    - Home: index.md
+    - API:
+        - 'File I/O': fileio.md
+        - 'Blob Detection': blobdetection.md
+
+repo_name: 'GitHub'
+repo_url: https://github.com/mattmeehan/decotools
+
+markdown_extensions:
+  - codehilite
+  - toc(permalink=false)

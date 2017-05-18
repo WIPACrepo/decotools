@@ -1,0 +1,39 @@
+{
+    "docs": [
+        {
+            "location": "/",
+            "text": "Welcome to the decotools documentation!\n\n\nThis documentation page is still under construction\n.\n\n\nDecotools is a python package for analyzing \nDECO data\n.\n\n\nDECO is a citizen science project that enables users around the world to detect cosmic rays and other energetic particles with their cell phones and tablets. The recorded events are automatically uploaded to a central database. In addition to detecting particle events, users can analyze the data produced by their own or other users\u2019 phones.\n\n\nUseful links\n\n\n\n\nDECO homepage\n\n\nGitHub repository",
+            "title": "Home"
+        },
+        {
+            "location": "/#welcome-to-the-decotools-documentation",
+            "text": "This documentation page is still under construction .  Decotools is a python package for analyzing  DECO data .  DECO is a citizen science project that enables users around the world to detect cosmic rays and other energetic particles with their cell phones and tablets. The recorded events are automatically uploaded to a central database. In addition to detecting particle events, users can analyze the data produced by their own or other users\u2019 phones.",
+            "title": "Welcome to the decotools documentation!"
+        },
+        {
+            "location": "/#useful-links",
+            "text": "DECO homepage  GitHub repository",
+            "title": "Useful links"
+        },
+        {
+            "location": "/fileio/",
+            "text": "File I/O\n\n\ndef\n \nget_iOS_files\n(\nstart_date\n=\nNone\n,\n \nend_date\n=\nNone\n,\n \ndata_dir\n=\n'/net/deco/iOSdata'\n,\n\n                  \ninclude_events\n=\nTrue\n,\n \ninclude_min_bias\n=\nFalse\n,\n\n                  \nphone_model\n=\nNone\n,\n \nverbose\n=\n0\n)\n\n\n\n\n\n\nFunction to retrieve deco iOS image files\n\n\nParameters\n\n\n\n\n\n\nstart_date\n : str, optional\n\n\nStarting date for the iOS files to retrieve. Use any common\ndate format (e.g. '2017-01-01', '20170101', 'Jan 1, 2017', etc).\nDefault starting date is '2016.01.01'.\n\n\n\n\n\n\nend_date\n : str, optional\n\n\nEnding date for the iOS files to retrieve. Use any common\ndate format (e.g. '2017-01-01', '20170101', 'Jan 1, 2017', etc).\nDefault is the current date.\n\n\n\n\n\n\ndata_dir\n : str, optional\n\n\nBase directory to search for iOS image files.\n\n\n\n\n\n\ninclude_events\n : bool, optional\n\n\nOption to include images files flagged as events. Default is True.\n\n\n\n\n\n\ninclude_min_bias\n : bool, optional\n\n\nOption to include minimum bias image files. Default is False.\n\n\n\n\n\n\nphone_model\n : str or list, optional\n\n\nOption to specify which phone models you would like to look at.\nCan be either a string, e.g. 'iPhone 7', or a list of models,\ne.g. ['iPhone 5', 'iPhone 5s']. Default is to include all\nphone models.\n\n\n\n\n\n\nverbose\n : int (0 or 1)\n\n\nOption to have verbose output when getting files. Where 0 is\nleast verbose, while 1 is the most verbose.\n\n\n\n\n\n\nReturns\n\n\n\n\n\n\nnumpy.ndarray\n\n\nNumpy array containing files that match specified criteria",
+            "title": "File I/O"
+        },
+        {
+            "location": "/fileio/#file-io",
+            "text": "def   get_iOS_files ( start_date = None ,   end_date = None ,   data_dir = '/net/deco/iOSdata' , \n                   include_events = True ,   include_min_bias = False , \n                   phone_model = None ,   verbose = 0 )   Function to retrieve deco iOS image files  Parameters    start_date  : str, optional  Starting date for the iOS files to retrieve. Use any common\ndate format (e.g. '2017-01-01', '20170101', 'Jan 1, 2017', etc).\nDefault starting date is '2016.01.01'.    end_date  : str, optional  Ending date for the iOS files to retrieve. Use any common\ndate format (e.g. '2017-01-01', '20170101', 'Jan 1, 2017', etc).\nDefault is the current date.    data_dir  : str, optional  Base directory to search for iOS image files.    include_events  : bool, optional  Option to include images files flagged as events. Default is True.    include_min_bias  : bool, optional  Option to include minimum bias image files. Default is False.    phone_model  : str or list, optional  Option to specify which phone models you would like to look at.\nCan be either a string, e.g. 'iPhone 7', or a list of models,\ne.g. ['iPhone 5', 'iPhone 5s']. Default is to include all\nphone models.    verbose  : int (0 or 1)  Option to have verbose output when getting files. Where 0 is\nleast verbose, while 1 is the most verbose.    Returns    numpy.ndarray  Numpy array containing files that match specified criteria",
+            "title": "File I/O"
+        },
+        {
+            "location": "/blobdetection/",
+            "text": "Blob detection\n\n\nUnder construction...",
+            "title": "Blob Detection"
+        },
+        {
+            "location": "/blobdetection/#blob-detection",
+            "text": "Under construction...",
+            "title": "Blob detection"
+        }
+    ]
+}
