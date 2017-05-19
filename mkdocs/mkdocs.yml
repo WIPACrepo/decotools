@@ -1,6 +1,6 @@
 site_name: decotools
 site_description: DECO toolset
-site_dir: ../docs
+# site_dir: ../docs
 theme_dir: cinder
 pages:
     - Home: index.md
