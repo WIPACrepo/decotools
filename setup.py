@@ -14,5 +14,5 @@ setup(
     author='James Bourbeau + Mr. Meehan',
     author_email='jbourbeau@wisc.edu',
     packages=find_packages(),
-    install_requires=['numpy', 'pandas', 'mkdocs', 'mkdocs-cinder', 'pytest']
+    install_requires=['numpy', 'pandas']
 )
