@@ -9,3 +9,4 @@ DECO is a citizen science project that enables users around the world to detect 
 ## Useful links
 * [DECO homepage](https://wipac.wisc.edu/deco/home)
 * [GitHub repository](https://github.com/mattmeehan/decotools)
+* [Contributing guide](contributing)
