@@ -4,10 +4,10 @@ from PIL import Image
 from skimage import measure
 
 
-def get_image_array(image_file, as_grey=True):
+def get_image_array(image_file, greyscale=True):
 
     img = Image.open(image_file)
-    if as_grey:
+    if greyscale:
         img = img.convert('L')
     image = []
     pix = img.load()
@@ -273,13 +273,13 @@ def group_blobs(blobs, max_dist):
                 bg.add_blob(bi)
                 groups.append(bg)
 
-    return groups
+    return np.asarray(groups, dtype=object)
 
 
 def extract_blobs(image_file, threshold=20., min_area=5., max_area=1000.,
-                  max_dist=150.):
+                  max_dist=150., greyscale=True):
 
-    image = get_image_array(image_file, as_grey=True)
+    image = get_image_array(image_file, greyscale=greyscale)
 
     # Calculate contours using the scikit-image marching squares algorithm,
     # store as Blobs, and group the Blobs into associated clusters
