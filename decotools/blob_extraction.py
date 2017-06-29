@@ -1,5 +1,7 @@
 
+from collections import defaultdict
 import numpy as np
+import pandas as pd
 from PIL import Image
 from skimage import measure
 
@@ -16,6 +18,8 @@ def get_image_array(image_file, greyscale=True):
     nx, ny = img.size[0], img.size[1]
     x0, y0, x1, y1 = (0, 0, nx, ny)
     for y in xrange(ny):
+        if y != 0:
+            y = -y+ny
         image.append([pix[x, y] for x in xrange(nx)])
 
     image = np.asarray(image, dtype=float)
@@ -81,7 +85,7 @@ class BlobGroup(object):
     '''A list of blobs that is grouped or associated in some way, i.e., if
        their contour centroids are relatively close together.'''
 
-    def __init__(self):
+    def __init__(self, image):
         '''Initialize a list of stored blobs and the bounding rectangle which
         defines the group.'''
         self.blobs = []
@@ -89,6 +93,11 @@ class BlobGroup(object):
         self.xmax = -1e10
         self.ymin =  1e10
         self.ymax = -1e10
+        self.image = image
+
+    def __repr__(self):
+        str_rep = 'BlobGroup(n_blobs={})'.format(len(self.blobs))
+        return str_rep
 
     def add_blob(self, blob):
         '''Add a blob to the group and enlarge the bounding rectangle of the
@@ -118,9 +127,12 @@ class BlobGroup(object):
             xmax += 0.5*(yL-xL)
         return (xmin, xmax, ymin, ymax)
 
-    def get_sub_image(self, image):
+    def get_sub_image(self, image=None):
         '''Given an image, extract the section of the image corresponding to
            the bounding box of the blob group.'''
+
+        if image is None:
+            image = self.image.copy()
         ny,nx = image.shape
         x0,x1,y0,y1 = self.get_bounding_box()
 
@@ -178,18 +190,15 @@ class BlobGroup(object):
         moments_hu = np.append(moments_hu,hu_8)
         return moments_hu
 
-    def get_region_props(self, image):
+    def get_region_props(self, threshold):
 
-        subImage = self.get_sub_image(image).transpose()
-        labels, num = measure.label(subImage, return_num=True)
-        region_properties = measure.regionprops(labels, subImage)
-        region_idx, max_area = 0, 0
-        for idx, region in enumerate(region_properties):
-            if region['area'] > max_area:
-                max_area = region['area']
-                region_idx = idx
+        subimage = self.get_sub_image()
+        labeled_image = subimage >= threshold
+        region_properties = measure.regionprops(labeled_image.astype(int), subimage)
+        if len(region_properties) > 1:
+            raise ValueError('Image has more than one region!')
 
-        return region_properties[region_idx]
+        return region_properties[0]
 
     def get_max_intensity(self, image):
         '''Find the maximum intensity within the blob
@@ -242,7 +251,7 @@ class BlobGroup(object):
         return l1, l2, theta
 
 
-def group_blobs(blobs, max_dist):
+def group_blobs(image, blobs, max_dist):
     '''Given a list of blobs, group them by distance between the centroids of
        any two blobs.  If the centroids are more distant than max_dist, create a
        new blob group.'''
@@ -253,7 +262,7 @@ def group_blobs(blobs, max_dist):
         # a blob group.  Then loop through each blob and add either add it to
         # this group (depending on the distance measure) or make it the
         # nucleus of a new blob group
-        bg = BlobGroup()
+        bg = BlobGroup(image=image)
         bg.add_blob(blobs[0])
         groups.append(bg)
 
@@ -269,14 +278,14 @@ def group_blobs(blobs, max_dist):
                         isGrouped = True
                         break
             if not isGrouped:
-                bg = BlobGroup()
+                bg = BlobGroup(image=image)
                 bg.add_blob(bi)
                 groups.append(bg)
 
     return np.asarray(groups, dtype=object)
 
 
-def extract_blobs(image_file, threshold=20., min_area=5., max_area=1000.,
+def extract_blobs(image_file, threshold=20., min_area=10., max_area=200.,
                   max_dist=150., greyscale=True):
 
     image = get_image_array(image_file, greyscale=greyscale)
@@ -285,6 +294,16 @@ def extract_blobs(image_file, threshold=20., min_area=5., max_area=1000.,
     # store as Blobs, and group the Blobs into associated clusters
     blobs = findblobs(image, threshold=threshold,
                       min_area=min_area, max_area=max_area)
-    groups = group_blobs(blobs, max_dist=max_dist)
+    groups = group_blobs(image, blobs, max_dist=max_dist)
 
-    return groups
+    data = []
+    for group in groups:
+        region_props = group.get_region_props(threshold)
+        prop_dict = {property_:region_props[property_] for property_ in region_props}
+        prop_dict['n_blobs'] = len(group.blobs)
+        prop_dict['group_image'] = group.get_sub_image()
+        data.append(prop_dict)
+
+    region_prop_df = pd.DataFrame.from_records(data)
+
+    return region_prop_df
