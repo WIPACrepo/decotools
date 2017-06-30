@@ -48,6 +48,6 @@ Function to retrieve deco iOS image files
 
 **Returns**
 
-* numpy.ndarray
+* `numpy.ndarray`
 
     Numpy array containing files that match specified criteria
