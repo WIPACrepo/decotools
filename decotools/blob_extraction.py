@@ -1,5 +1,4 @@
 
-from collections import defaultdict
 import numpy as np
 import pandas as pd
 from PIL import Image
@@ -45,6 +44,10 @@ class Blob(object):
         for i in range(self._length):
             area += 0.5*(y[i]+y[i-1])*(x[i]-x[i-1])
         self.area = area
+
+    def __repr__(self):
+        str_rep = 'Blob(x={}, y={}, area={})'.format(self.xc, self.yc, self.area)
+        return str_rep
 
     def length(self):
         ''' Find the approx length of the blob from the max points of the
@@ -127,14 +130,17 @@ class BlobGroup(object):
             xmax += 0.5*(yL-xL)
         return (xmin, xmax, ymin, ymax)
 
-    def get_sub_image(self, image=None):
+    def get_sub_image(self, image=None, square=True):
         '''Given an image, extract the section of the image corresponding to
            the bounding box of the blob group.'''
 
         if image is None:
             image = self.image.copy()
         ny,nx = image.shape
-        x0,x1,y0,y1 = self.get_bounding_box()
+        if square:
+            x0,x1,y0,y1 = self.get_square_bounding_box()
+        else:
+            x0,x1,y0,y1 = self.get_bounding_box()
 
         # Account for all the weird row/column magic in the image table...
         i0,i1 = [ny - int(t) for t in (y1,y0)]
@@ -190,9 +196,9 @@ class BlobGroup(object):
         moments_hu = np.append(moments_hu,hu_8)
         return moments_hu
 
-    def get_region_props(self, threshold):
+    def get_region_props(self, threshold, square=True):
 
-        subimage = self.get_sub_image()
+        subimage = self.get_sub_image(square=square)
         labeled_image = subimage >= threshold
         region_properties = measure.regionprops(labeled_image.astype(int), subimage)
         if len(region_properties) > 1:
@@ -286,7 +292,7 @@ def group_blobs(image, blobs, max_dist):
 
 
 def extract_blobs(image_file, threshold=20., min_area=10., max_area=200.,
-                  max_dist=150., greyscale=True):
+                  max_dist=20., greyscale=True, square=True):
 
     image = get_image_array(image_file, greyscale=greyscale)
 
@@ -298,10 +304,10 @@ def extract_blobs(image_file, threshold=20., min_area=10., max_area=200.,
 
     data = []
     for group in groups:
-        region_props = group.get_region_props(threshold)
+        region_props = group.get_region_props(threshold, square=square)
         prop_dict = {property_:region_props[property_] for property_ in region_props}
         prop_dict['n_blobs'] = len(group.blobs)
-        prop_dict['group_image'] = group.get_sub_image()
+        prop_dict['image'] = group.get_sub_image(square=square).T
         data.append(prop_dict)
 
     region_prop_df = pd.DataFrame.from_records(data)
