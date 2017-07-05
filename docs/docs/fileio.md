@@ -41,6 +41,14 @@ Function to retrieve deco iOS image files
     e.g. ['iPhone 5', 'iPhone 5s']. Default is to include all
     phone models.
 
+* `device_id` : str or list, optional
+
+    Option to specify which devices you want to look at. Can 
+    either be a string, e.g. 'EFD5764E-7209-4579-B0A8-EAF80C950147', or 
+    a list of device IDs, e.g. ['EFD5764E-7209-4579-B0A8-EAF80C950147',
+    'F216114B-8710-4790-A05D-D645C9C79C27']. Default is to include all
+    device IDs.
+
 * `verbose` : int (0 or 1)
 
     Option to have verbose output when getting files. Where 0 is

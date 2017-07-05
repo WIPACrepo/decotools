@@ -48,9 +48,16 @@ def get_phone_model(image_file):
     return xml_dict['Model']
 
 
+def get_id(image_file):
+    xml_file = image_file_to_xml_file(image_file)
+    xml_dict = xml_to_dict(xml_file)
+
+    return xml_dict['LensID']
+
+
 def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
                   include_events=True, include_min_bias=False,
-                  phone_model=None, verbose=0):
+                  phone_model=None, device_id=None, verbose=0):
     '''Function to retrieve deco iOS image files
 
     Parameters
@@ -74,6 +81,12 @@ def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
         Can be either a string, e.g. 'iPhone 7', or a list of models,
         e.g. ['iPhone 5', 'iPhone 5s']. Default is to include all
         phone models.
+    device_id : str or list, optional
+        Option to specify which devices you want to look at. Can 
+        either be a string, e.g. 'EFD5764E-7209-4579-B0A8-EAF80C950147', or 
+        a list of device IDs, e.g. ['EFD5764E-7209-4579-B0A8-EAF80C950147',
+        'F216114B-8710-4790-A05D-D645C9C79C27']. Default is to include all
+        device IDs.
     verbose : int (0 or 1)
         Option to have verbose output when getting files. Where 0 is
         least verbose, while 1 is the most verbose.
@@ -123,21 +136,62 @@ def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
     elif not include_events and include_min_bias:
         file_list = [f for f in file_list if 'minBias' in f]
 
+    file_model_list = []
+    file_device_list = []
+
     # If specified, only keep files with desired phone model(s)
     if phone_model is not None:
         # Validate phone_model input
         if isinstance(phone_model, str):
             phone_model_list = [phone_model]
         assert isinstance(phone_model_list, (list, tuple, np.ndarray))
-
+        
         filtered_list = []
         # Filter out non-matching phone models
         for idx, f in enumerate(file_list):
             try:
-                if get_phone_model(f) in phone_model_list: filtered_list.append(f)
+                if get_phone_model(f) in phone_model_list: 
+                    filtered_list.append(f)
             except:
                 continue
-        file_list = filtered_list
+        file_model_list = filtered_list
+
+    # If specified, only keep files with desired device ID(s)
+    if device_id is not None:
+        # Validate device_id input
+        if isinstance(device_id,str):
+            device_id_list = [device_id]
+        assert isinstance(device_id_list, (list, tuple, np.ndarray))
+ 
+        filtered_list = []
+        # Filter out non-matching device IDs
+        for idx, f in enumerate(file_list):
+            try:
+                if get_id(f) in device_id_list:
+                    filtered_list.append(f)
+            except:
+                continue
+        
+        file_device_list = filtered_list
+    
+
+    # Merge the two lists, or specify which one is the correct file_list
+    if device_id is not None or phone_model is not None:    
+        if file_model_list and file_device_list:
+            file_list = file_model_list + file_device_list
+        elif file_model_list and not file_device_list:
+            file_list = file_model_list
+        elif file_device_list and not file_model_list:
+            file_list = file_device_list
+        else:
+            # if the model list and device list are both empty,
+            # return an empty list
+            file_list = []
+
+
+    # Get rid of duplicates
+    file_list = list(set(file_list))
+
 
     # Cast file_list from a python list to a numpy.ndarray
     file_array = np.asarray(file_list, dtype=str)
