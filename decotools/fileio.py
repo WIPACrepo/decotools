@@ -112,12 +112,12 @@ def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
         Option to include images files flagged as events. Default is True.
     include_min_bias : bool, optional
         Option to include minimum bias image files. Default is False.
-    phone_model : str or list, optional
+    phone_model : str or array-like, optional
         Option to specify which phone models you would like to look at.
         Can be either a string, e.g. 'iPhone 7', or a list of models,
         e.g. ['iPhone 5', 'iPhone 5s']. Default is to include all
         phone models.
-    device_id : str or list, optional
+    device_id : str or array-like, optional
         Option to specify which devices you want to look at. Can
         either be a string, e.g. 'EFD5764E-7209-4579-B0A8-EAF80C950147', or
         a list of device IDs, e.g. ['EFD5764E-7209-4579-B0A8-EAF80C950147',
