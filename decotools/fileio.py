@@ -1,7 +1,9 @@
 
+from __future__ import division
 import os
 import glob
 import time
+import warnings
 import xml.etree.ElementTree as ET
 import numpy as np
 import pandas as pd
@@ -41,18 +43,52 @@ def image_file_to_xml_file(image_file):
     return xml_file
 
 
-def get_phone_model(image_file):
-    xml_file = image_file_to_xml_file(image_file)
-    xml_dict = xml_to_dict(xml_file)
+def get_metadata_dataframe(files):
+    xml_data = []
+    for f in files:
+        try:
+            xml_file = image_file_to_xml_file(f)
+            xml_dict = xml_to_dict(xml_file)
+            xml_df = pd.DataFrame.from_records(xml_dict, index=[f])
+            xml_data.append(xml_df)
+        except IOError:
+            warnings.warn('No metadata file found for {}...'.format(f))
+    df = pd.concat(xml_data)
 
-    return xml_dict['Model']
+    return df
 
 
-def get_id(image_file):
-    xml_file = image_file_to_xml_file(image_file)
-    xml_dict = xml_to_dict(xml_file)
+def validate_filter_input(user_input):
 
-    return xml_dict['LensID']
+    if user_input is None:
+        return None
+
+    if isinstance(user_input, str):
+        user_input = [user_input]
+    if not isinstance(user_input, (list, tuple, set, np.ndarray)):
+        raise TypeError('Input must be array-like, got {}'.format(type(user_input)))
+
+    return user_input
+
+
+def filter_dataframe(df, metadata_key, desired_values=None):
+
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError('df must be a pandas.DataFrame, '
+                        'got {}'.format(type(df)))
+
+    if desired_values is not None:
+        return df[ df[metadata_key].isin(desired_values) ]
+    else:
+        return df
+
+
+def get_date_files(dates, data_dir):
+    file_list = []
+    for date in dates:
+        date_files_pattern = os.path.join(data_dir, date, '*.png')
+        file_list.extend( glob.glob(date_files_pattern) )
+    return file_list
 
 
 def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
@@ -82,8 +118,8 @@ def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
         e.g. ['iPhone 5', 'iPhone 5s']. Default is to include all
         phone models.
     device_id : str or list, optional
-        Option to specify which devices you want to look at. Can 
-        either be a string, e.g. 'EFD5764E-7209-4579-B0A8-EAF80C950147', or 
+        Option to specify which devices you want to look at. Can
+        either be a string, e.g. 'EFD5764E-7209-4579-B0A8-EAF80C950147', or
         a list of device IDs, e.g. ['EFD5764E-7209-4579-B0A8-EAF80C950147',
         'F216114B-8710-4790-A05D-D645C9C79C27']. Default is to include all
         device IDs.
@@ -106,6 +142,9 @@ def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
     if not isinstance(verbose, int):
         raise ValueError('Expecting an int for verbose, '
                          'got {}'.format(type(verbose)))
+    # Validate user input for filtering values
+    phone_model = validate_filter_input(phone_model)
+    device_id = validate_filter_input(device_id)
 
     # If no end_date specified, set as today's date
     if not end_date:
@@ -118,15 +157,14 @@ def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
     try:
         dates = pd.date_range(start_date, end_date)
         dates = dates.strftime('%Y.%m.%d')
-    except:
+    except ValueError:
         raise ValueError('Invalid start_date or end_date entered')
 
     # Build up list of all image files within the start_date to end_date range
-    file_list = []
-    for date in dates:
-        date_files_pattern = os.path.join(data_dir, date, '*.png')
-        date_file_list = glob.glob(date_files_pattern)
-        file_list.extend(date_file_list)
+    file_list = get_date_files(dates, data_dir)
+    if len(file_list) == 0:
+        warnings.warn('No files for found for the specified date range')
+        return file_list
 
     # If specified, filter out events/minimum bias images appropriately
     if include_events and include_min_bias:
@@ -136,68 +174,23 @@ def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
     elif not include_events and include_min_bias:
         file_list = [f for f in file_list if 'minBias' in f]
 
-    file_model_list = []
-    file_device_list = []
-
-    # If specified, only keep files with desired phone model(s)
-    if phone_model is not None:
-        # Validate phone_model input
-        if isinstance(phone_model, str):
-            phone_model_list = [phone_model]
-        assert isinstance(phone_model_list, (list, tuple, np.ndarray))
-        
-        filtered_list = []
-        # Filter out non-matching phone models
-        for idx, f in enumerate(file_list):
-            try:
-                if get_phone_model(f) in phone_model_list: 
-                    filtered_list.append(f)
-            except:
-                continue
-        file_model_list = filtered_list
-
-    # If specified, only keep files with desired device ID(s)
-    if device_id is not None:
-        # Validate device_id input
-        if isinstance(device_id,str):
-            device_id_list = [device_id]
-        assert isinstance(device_id_list, (list, tuple, np.ndarray))
- 
-        filtered_list = []
-        # Filter out non-matching device IDs
-        for idx, f in enumerate(file_list):
-            try:
-                if get_id(f) in device_id_list:
-                    filtered_list.append(f)
-            except:
-                continue
-        
-        file_device_list = filtered_list
-    
-
-    # Merge the two lists, or specify which one is the correct file_list
-    if device_id is not None or phone_model is not None:    
-        if file_model_list and file_device_list:
-            file_list = file_model_list + file_device_list
-        elif file_model_list and not file_device_list:
-            file_list = file_model_list
-        elif file_device_list and not file_model_list:
-            file_list = file_device_list
-        else:
-            # if the model list and device list are both empty,
-            # return an empty list
-            file_list = []
-
-
-    # Get rid of duplicates
-    file_list = list(set(file_list))
-
-
-    # Cast file_list from a python list to a numpy.ndarray
-    file_array = np.asarray(file_list, dtype=str)
+    # Construct DataFrame containing metadata to use for filtering
+    df = get_metadata_dataframe(file_list)
+    # Filter out image files based on user input
+    df = filter_dataframe(df, metadata_key='Model', desired_values=phone_model)
+    df = filter_dataframe(df, metadata_key='LensID', desired_values=device_id)
 
     # Optional verbose output
     if verbose:
-        print('Found {} iOS image files'.format(file_array.shape[0]))
+        print('Found {} iOS image files'.format(df.shape[0]))
+        n_devices = len(df.LensID.unique())
+        print('Found {} unique devices'.format(n_devices))
+        print('Models present:')
+        models = df.Model.unique()
+        for model in models:
+            model_frac = np.sum(df.Model == model)/df.shape[0]
+            print('\t {} [ {:0.1%} ]'.format(model, model_frac))
+
+    file_array = df.index.values
 
     return file_array
