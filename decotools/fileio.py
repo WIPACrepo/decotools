@@ -3,10 +3,16 @@ from __future__ import division
 import os
 import glob
 import time
-import warnings
+import logging
 import xml.etree.ElementTree as ET
 import numpy as np
 import pandas as pd
+
+# Specify logging settings
+logging.basicConfig(
+    format='%(levelname)s: %(name)s - %(message)s')
+logging_level_dict = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}
+logger = logging.getLogger(__name__)
 
 
 def xml_to_dict(xmlfile):
@@ -52,7 +58,7 @@ def get_metadata_dataframe(files):
             xml_df = pd.DataFrame.from_records(xml_dict, index=[f])
             xml_data.append(xml_df)
         except IOError:
-            warnings.warn('No metadata file found for {}...'.format(f))
+            logger.warning('No metadata file found for {}...'.format(f))
     df = pd.concat(xml_data)
 
     return df
@@ -76,6 +82,8 @@ def filter_dataframe(df, metadata_key, desired_values=None):
     if not isinstance(df, pd.DataFrame):
         raise TypeError('df must be a pandas.DataFrame, '
                         'got {}'.format(type(df)))
+    if desired_values and not isinstance(desired_values, (list, tuple, set, np.ndarray)):
+        raise TypeError('desired_values must be array-like')
 
     if desired_values is not None:
         return df[ df[metadata_key].isin(desired_values) ]
@@ -142,6 +150,7 @@ def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
     if not isinstance(verbose, int):
         raise ValueError('Expecting an int for verbose, '
                          'got {}'.format(type(verbose)))
+    logger.setLevel(logging_level_dict[verbose])
     # Validate user input for filtering values
     phone_model = validate_filter_input(phone_model)
     device_id = validate_filter_input(device_id)
@@ -163,7 +172,7 @@ def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
     # Build up list of all image files within the start_date to end_date range
     file_list = get_date_files(dates, data_dir)
     if len(file_list) == 0:
-        warnings.warn('No files for found for the specified date range')
+        logger.warning('No files for found for the specified date range')
         return file_list
 
     # If specified, filter out events/minimum bias images appropriately
@@ -173,6 +182,9 @@ def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
         file_list = [f for f in file_list if 'minBias' not in f]
     elif not include_events and include_min_bias:
         file_list = [f for f in file_list if 'minBias' in f]
+    if len(file_list) == 0:
+        logger.warning('No files remaining after event vs. minimum bias filtering')
+        return file_list
 
     # Construct DataFrame containing metadata to use for filtering
     df = get_metadata_dataframe(file_list)
@@ -180,16 +192,16 @@ def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
     df = filter_dataframe(df, metadata_key='Model', desired_values=phone_model)
     df = filter_dataframe(df, metadata_key='LensID', desired_values=device_id)
 
-    # Optional verbose output
-    if verbose:
-        print('Found {} iOS image files'.format(df.shape[0]))
-        n_devices = len(df.LensID.unique())
-        print('Found {} unique devices'.format(n_devices))
-        print('Models present:')
-        models = df.Model.unique()
-        for model in models:
-            model_frac = np.sum(df.Model == model)/df.shape[0]
-            print('\t {} [ {:0.1%} ]'.format(model, model_frac))
+    # Log info about images
+    num_images_str = 'Found {} iOS image files'.format(df.shape[0])
+    n_devices = len(df.LensID.unique())
+    num_devices_str = 'Found {} unique devices'.format(n_devices)
+    models_str = 'Models present:'
+    models = df.Model.unique()
+    for model in models:
+        model_frac = np.sum(df.Model == model)/df.shape[0]
+        models_str += '\n\t\t{} [ {:0.1%} ]'.format(model, model_frac)
+    logger.info('\n\t'.join(['',num_images_str, num_devices_str, models_str]))
 
     file_array = df.index.values
 
