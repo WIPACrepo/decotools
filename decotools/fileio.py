@@ -100,7 +100,7 @@ def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
    
     # Validate that data_dir exists:
     if os.path.isdir(data_dir)==False:
-        raise IOError('data_dir, %s, cannot be located.'%(data_dir))
+        raise IOError('data_dir, {}, cannot be located.'.format(data_dir))
     # Validate include_min_bias and include_events:
     if not any([include_events, include_min_bias]):
         raise ValueError('At least one of include_events or include_min_bias '
