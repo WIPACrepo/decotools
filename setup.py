@@ -14,5 +14,6 @@ setup(
     author='James Bourbeau + Mr. Meehan',
     author_email='jbourbeau@wisc.edu',
     packages=find_packages(),
-    install_requires=['numpy', 'pandas', 'scikit-image', 'Pillow', 'matplotlib']
+    install_requires=['numpy', 'pandas', 'scikit-image', 'Pillow',
+                      'matplotlib']
 )
