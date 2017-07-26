@@ -15,5 +15,5 @@ setup(
     author_email='jbourbeau@wisc.edu',
     packages=find_packages(),
     install_requires=['numpy', 'pandas', 'scikit-image', 'Pillow',
-                      'matplotlib']
+                      'matplotlib', 'dask[complete]']
 )
