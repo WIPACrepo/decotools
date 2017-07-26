@@ -1,19 +1,22 @@
-
 from __future__ import division
 import os
 import glob
 import time
 import logging
-import xml.etree.ElementTree as ET
+import plistlib
+from xml.parsers.expat import ExpatError
 import numpy as np
 import pandas as pd
-import multiprocessing as mp
+import dask
+from dask import delayed, multiprocessing
+from dask.diagnostics import ProgressBar
 
 # Specify logging settings
 logging.basicConfig(
     format='%(levelname)s: %(name)s - %(message)s')
 logging_level_dict = {0: logging.ERROR, 1: logging.INFO, 2: logging.DEBUG}
 logger = logging.getLogger(__name__)
+
 
 # Define custom exceptions related to parsing metadata files
 class NoMetadataFile(Exception):
@@ -29,38 +32,18 @@ class UnknownMetadataIssue(Exception):
     pass
 
 
-def xmlfile_to_dict(xmlfile):
-    '''Function to parse xml metadata file
+def xmlfile_to_dict(xml_file):
+    '''Returns a dictionary with metadata information stored in xml_file
     '''
     try:
-        tree = ET.parse(xmlfile)  # Initiates the tree Ex: <user-agents>
+        xml_dict = plistlib.readPlist(xml_file)
     except IOError:
-        raise NoMetadataFile('No metadata file found for {}...'.format(xmlfile))
-    except ET.ParseError:
-        if os.path.getsize(xmlfile) == 0:
-            raise EmptyMetadataFile('The metadata file {} is empty'.format(xmlfile))
+        raise NoMetadataFile('No metadata file found for {}...'.format(xml_file))
+    except ExpatError:
+        if os.path.getsize(xml_file) == 0:
+            raise EmptyMetadataFile('The metadata file {} is empty'.format(xml_file))
         else:
-            raise UnknownMetadataIssue('Ran into an error parsing {}'.format(xmlfile))
-    root = tree.getroot()  # Starts the root of the tree Ex: <user-agent>
-    all_records = []  # This is our record list which we will convert into a dataframe
-    headers = []  # Subchildren tags will be parsed and appended here
-    for i, child in enumerate(root):  # Begin looping through our root tree
-        record = []  # Place holder for our record
-        # iterate through the subchildren to user-agent, Ex: ID, String,
-        # Description.
-        for subchild in child:
-            # Extract the text and append it to our record list
-            record.append(subchild.text)
-            # Check the header list to see if the subchild tag <ID>,
-            # <String>... is in our headers field. If not append it. This will
-            # be used for our headers.
-            if subchild.tag not in headers:
-                headers.append(subchild.tag)
-        all_records.append(record)  # Append this record to all_records.
-    xml_parsed = np.asarray(all_records[0])
-    keys = xml_parsed[::2]
-    values = xml_parsed[1::2]
-    xml_dict = dict(zip(keys, values))
+            raise UnknownMetadataIssue('Ran into an error parsing {}'.format(xml_file))
 
     return xml_dict
 
@@ -75,10 +58,27 @@ def image_file_to_xml_file(image_file):
     return xml_file
 
 
-def _get_metadata_dataframe(files):
+def get_id_from_filename(image_file):
+    file_basename = os.path.basename(image_file)
+    phone_id = file_basename.split('_')[0]
+
+    return phone_id[1:]
+
+
+def get_time_from_filename(image_file):
+    file_basename = os.path.basename(image_file)
+    file_name, ext = os.path.splitext(file_basename)
+    date = file_name.split('_')[1]
+    time = file_name.split('_')[2]
+
+    return pd.to_datetime(date + ' ' + time, utc=True)
+
+
+def get_metadata_dataframe_batches(files):
+
     xml_data = []
-    for f in files:
-        xml_file = image_file_to_xml_file(f)
+    for idx, image_file in enumerate(files):
+        xml_file = image_file_to_xml_file(image_file)
         try:
             xml_dict = xmlfile_to_dict(xml_file)
             xml_dict['metadata_exists'] = True
@@ -94,33 +94,35 @@ def _get_metadata_dataframe(files):
             logger.debug(exception)
             xml_dict = {'metadata_parsing_error': True}
 
-        xml_df = pd.DataFrame.from_records(xml_dict, index=[f])
+        xml_dict['image_file'] = image_file
+        xml_dict['min_bias'] = True if 'minBias' in image_file else False
+        # Time and device ID info can be extracted from the image file name
+        # (so we have some info if there is an issue w/metadata file)
+        xml_dict['time'] = get_time_from_filename(image_file)
+        xml_dict['id'] = get_id_from_filename(image_file)
+
+        xml_df = pd.DataFrame.from_records(xml_dict, index=[idx])
         xml_data.append(xml_df)
 
-    df = pd.concat(xml_data)
-
-    return df
-
-
-def _get_metadata_dataframe_multiprocess(files, n_jobs=1):
-
-    pool = mp.Pool(processes=n_jobs)
-    async_results = [pool.apply_async(_get_metadata_dataframe, args=(f,))
-                for f in np.array_split(files, n_jobs)]
-    dataframes = []
-    for result in async_results:
-        dataframes.append(result.get())
-
-    df = pd.concat(dataframes)
+    df = pd.concat(xml_data, ignore_index=True)
 
     return df
 
 
 def get_metadata_dataframe(files, n_jobs=1):
-    if n_jobs == 1:
-        return _get_metadata_dataframe(files)
-    else:
-        return _get_metadata_dataframe_multiprocess(files, n_jobs=n_jobs)
+
+    batches = np.array_split(files, 100)
+    df_list = [delayed(get_metadata_dataframe_batches)(batch) for batch in batches]
+    df_merged = delayed(pd.concat)(df_list, ignore_index=True)
+    print('Extracting metadata information:')
+    with ProgressBar():
+        if n_jobs == 1:
+            df = df_merged.compute(get=dask.get)
+        else:
+            df = df_merged.compute(get=multiprocessing.get,
+                                   num_workers=n_jobs)
+
+    return df
 
 
 def validate_filter_input(user_input):
@@ -131,7 +133,8 @@ def validate_filter_input(user_input):
     if isinstance(user_input, str):
         user_input = [user_input]
     if not isinstance(user_input, (list, tuple, set, np.ndarray)):
-        raise TypeError('Input must be array-like, got {}'.format(type(user_input)))
+        raise TypeError('Input must be array-like, '
+                        'got {}'.format(type(user_input)))
 
     return user_input
 
@@ -150,17 +153,18 @@ def filter_dataframe(df, metadata_key, desired_values=None):
         return df
 
 
-def get_date_files(dates, data_dir):
+def get_date_files(dates, data_dir, image_ext='png'):
     file_list = []
     for date in dates:
-        date_files_pattern = os.path.join(data_dir, date, '*.png')
+        date_files_pattern = os.path.join(data_dir, date, '*.{}'.format(image_ext))
         file_list.extend( glob.glob(date_files_pattern) )
     return file_list
 
 
 def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
                   include_events=True, include_min_bias=False,
-                  phone_model=None, device_id=None, n_jobs=1, verbose=0):
+                  phone_model=None, device_id=None, return_metadata=False,
+                  n_jobs=1, verbose=0):
     '''Function to retrieve deco iOS image files
 
     Parameters
@@ -190,6 +194,9 @@ def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
         a list of device IDs, e.g. ['EFD5764E-7209-4579-B0A8-EAF80C950147',
         'F216114B-8710-4790-A05D-D645C9C79C27']. Default is to include all
         device IDs.
+    return_metadata : boolean, optional
+        Return a DataFrame with metadata information for each image file
+        (default is False).
     n_jobs : int, optional
         The number of jobs to run in parallel (default is 1).
     verbose : int {0, 1, or 2}
@@ -234,7 +241,7 @@ def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
         raise ValueError('Invalid start_date or end_date entered')
 
     # Build up list of all image files within the start_date to end_date range
-    file_list = get_date_files(dates, data_dir)
+    file_list = get_date_files(dates, data_dir, image_ext='png')
     if len(file_list) == 0:
         logger.warning('No files for found for the specified date range')
         return file_list
@@ -250,39 +257,33 @@ def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
         logger.warning('No files remaining after event vs. minimum bias filtering')
         return file_list
 
-    if not any([phone_model, device_id]):
+    if not any([phone_model, device_id, return_metadata]):
         file_array = np.asarray(file_list)
     else:
         # Construct DataFrame containing metadata to use for filtering
         df = get_metadata_dataframe(file_list, n_jobs=n_jobs)
-        # Get info about any issues with metadata files
-        # This needs to be done before filtering!
-        num_no_metadata_files = np.sum(df['metadata_exists'] == False)
-        num_empty_metadata_files = np.sum(df['metadata_empty'] == True)
-        num_parsing_metadata_errors = np.sum(df['metadata_parsing_error'] == True)
         num_image_files = df.shape[0]
 
         # Filter out image files based on user input
-        df = filter_dataframe(df, metadata_key='Model', desired_values=phone_model)
-        df = filter_dataframe(df, metadata_key='LensID', desired_values=device_id)
+        df = (df.pipe(filter_dataframe, metadata_key='Model', desired_values=phone_model)
+                .pipe(filter_dataframe, metadata_key='LensID', desired_values=device_id)
+                .reset_index(drop=True)
+             )
 
         # Log info about images
-        num_images_str = 'Found {} iOS image files'.format(df.shape[0])
-        n_devices = len(df['LensID'].unique())
+        num_images_str = 'Found {} image files'.format(df.shape[0])
+        n_devices = len(df['id'].unique())
         num_devices_str = 'Found {} unique devices'.format(n_devices)
         models_str = 'Models present:'
         models = df['Model'].unique()
         for model in models:
             model_frac = np.sum(df['Model'] == model)/df.shape[0]
             models_str += '\n\t\t{} [ {:0.1%} ]'.format(model, model_frac)
-        missing_metadata_str = 'Number of missing metadata files: {}'.format(num_no_metadata_files)
-        empty_metadata_str = 'Number of empty metadata files: {}'.format(num_empty_metadata_files)
-        parsing_metadata_error_str = 'Number of metadata parsing errors: {}'.format(num_parsing_metadata_errors)
-        num_image_files_str = 'Number of image files: {}'.format(num_image_files)
-        logger.info('\n\t'.join(['',num_images_str, num_devices_str, models_str,
-                num_image_files_str, missing_metadata_str, empty_metadata_str,
-                parsing_metadata_error_str]))
+        logger.info('\n\t'.join(['',num_images_str, num_devices_str, models_str]))
 
-        file_array = df.index.values
+        if return_metadata:
+            return df
+
+        file_array = df['image_file'].values
 
     return file_array
