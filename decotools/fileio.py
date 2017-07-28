@@ -76,6 +76,10 @@ def get_time_from_filename(image_file):
 
 def get_metadata_dataframe_batches(files):
 
+    # If files is empty, then just return an empty DataFrame
+    if not files:
+        return pd.DataFrame()
+
     xml_data = []
     for idx, image_file in enumerate(files):
         xml_file = image_file_to_xml_file(image_file)
@@ -111,7 +115,8 @@ def get_metadata_dataframe_batches(files):
 
 def get_metadata_dataframe(files, n_jobs=1):
 
-    batches = np.array_split(files, 100)
+    # Split files into batches to be processed (potentially) in parallel
+    batches = np.array_split(files, min(100, len(files)))
     df_list = [delayed(get_metadata_dataframe_batches)(batch) for batch in batches]
     df_merged = delayed(pd.concat)(df_list, ignore_index=True)
     print('Extracting metadata information:')
