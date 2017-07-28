@@ -76,6 +76,10 @@ def get_time_from_filename(image_file):
 
 def get_metadata_dataframe_batches(files):
 
+    # If files is empty, then just return an empty DataFrame
+    if not files:
+        return pd.DataFrame()
+
     xml_data = []
     for idx, image_file in enumerate(files):
         xml_file = image_file_to_xml_file(image_file)
