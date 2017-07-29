@@ -77,7 +77,7 @@ def get_time_from_filename(image_file):
 def get_metadata_dataframe_batches(files):
 
     # If files is empty, then just return an empty DataFrame
-    if not files:
+    if len(files) == 0:
         return pd.DataFrame()
 
     xml_data = []
