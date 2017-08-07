@@ -54,8 +54,13 @@ def image_file_to_xml_file(image_file):
     directory, image_file_basename = os.path.split(image_file)
     xml_file_basename = 'metadata-' + image_file_basename.replace('.png', '.xml')
     xml_file = os.path.join(directory, xml_file_basename)
-
-    return xml_file
+    if os.path.exists(xml_file):
+        return xml_file
+    else:
+        # if xml_file does not contain 'metadata-' in the name, try without it    
+        xml_file_basename = image_file_basename.replace('.png','.xml')
+        xml_file = os.path.join(directory,xml_file_basename)
+        return xml_file
 
 
 def get_id_from_filename(image_file):
