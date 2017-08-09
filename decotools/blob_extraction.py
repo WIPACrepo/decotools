@@ -2,13 +2,40 @@
 import numpy as np
 import pandas as pd
 from skimage import io, measure
+from PIL import Image
 
 
-def get_image_array(image_file):
+def get_image_array(image_file, rgb_sum=False):
+    '''Returns an image array
 
-    image = io.imread(image_file)
-    # Convert RGB image to R+G+B grayscale
-    image = np.sum(image[:, :, :-1], axis=2)
+    Parameters
+    ----------
+    image_file : str
+        Path to image file.
+    rgb_sum : bool, optional
+        Whether to use a simple RGB sum to convert to image to grayscale, or
+        to use a weighted RGB sum (default: False).
+
+    Returns
+    -------
+    numpy.ndarray
+        Grayscale image array
+        
+    '''
+
+    if rgb_sum:
+        image = io.imread(image_file)
+        # Convert RGB image to R+G+B grayscale
+        image = np.sum(image[:, :, :-1], axis=2)
+
+    else:
+        img = Image.open(image_file)
+        # Convert grayscale using a weighted RGB sum
+        # From PIL documentation the weighted sum is given by
+        # grayscale = R * 299/1000 + G * 587/1000 + B * 114/1000
+        img = img.convert('L')
+        # Convert img to a numpy array
+        image = np.asarray(img, dtype=float).T
 
     return image
 
@@ -199,8 +226,9 @@ def group_blobs(image, blobs, max_dist):
     return np.asarray(groups, dtype=object)
 
 
-def extract_blobs(image_file, threshold=20., min_area=10., max_area=1000.,
-                  max_dist=5., group_max_area=None, square=True):
+def extract_blobs(image_file, threshold=20., rgb_sum=False, min_area=10.,
+                  max_area=1000., max_dist=5., group_max_area=None,
+                  square=True):
     '''Function to perform blob detection on an input image
 
     Blobs are found using the marching squares algorithm implemented in
@@ -213,6 +241,9 @@ def extract_blobs(image_file, threshold=20., min_area=10., max_area=1000.,
     threshold : float, optional
         Threshold for blob detection. Only pixels with an intensity above
         this threshold will be used in blob detection (default: 20).
+    rgb_sum : bool, optional
+        Whether to use a simple RGB sum to convert to image to grayscale, or
+        to use a weighted RGB sum (default: False).
     min_area : float, optional
         Minimum area for a blob to be kept. This helps get rid of noise in
         an image (default: 10).
@@ -240,7 +271,7 @@ def extract_blobs(image_file, threshold=20., min_area=10., max_area=1000.,
 
     '''
 
-    image = get_image_array(image_file)
+    image = get_image_array(image_file, rgb_sum=rgb_sum)
     if image.ndim != 2:
         return pd.DataFrame()
 
