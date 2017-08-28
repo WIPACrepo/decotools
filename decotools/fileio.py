@@ -32,7 +32,7 @@ class UnknownMetadataIssue(Exception):
     pass
 
 
-def xmlfile_to_dict(xml_file):
+def parse_xmlfile(xml_file):
     '''Returns a dictionary with metadata information stored in xml_file
     '''
     try:
@@ -57,7 +57,7 @@ def image_file_to_xml_file(image_file):
     if os.path.exists(xml_file):
         return xml_file
     else:
-        # if xml_file does not contain 'metadata-' in the name, try without it    
+        # if xml_file does not contain 'metadata-' in the name, try without it
         xml_file_basename = image_file_basename.replace('.png','.xml')
         xml_file = os.path.join(directory,xml_file_basename)
         return xml_file
@@ -89,7 +89,7 @@ def get_metadata_dataframe_batches(files):
     for idx, image_file in enumerate(files):
         xml_file = image_file_to_xml_file(image_file)
         try:
-            xml_dict = xmlfile_to_dict(xml_file)
+            xml_dict = parse_xmlfile(xml_file)
             xml_dict['metadata_exists'] = True
             xml_dict['metadata_empty'] = False
             xml_dict['metadata_parsing_error'] = False
@@ -267,7 +267,11 @@ def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
         logger.warning('No files remaining after event vs. minimum bias filtering')
         return file_list
 
-    if not any([phone_model, device_id, return_metadata]):
+    # If specified, filter out files based on device ID appropriately
+    if device_id:
+        file_list = [f for f in file_list if get_id_from_filename(f) in device_id]
+
+    if not any([phone_model, return_metadata]):
         file_array = np.asarray(file_list)
     else:
         # Construct DataFrame containing metadata to use for filtering
@@ -276,7 +280,6 @@ def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
 
         # Filter out image files based on user input
         df = (df.pipe(filter_dataframe, metadata_key='Model', desired_values=phone_model)
-                .pipe(filter_dataframe, metadata_key='LensID', desired_values=device_id)
                 .reset_index(drop=True)
              )
 

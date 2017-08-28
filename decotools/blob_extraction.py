@@ -3,6 +3,9 @@ import numpy as np
 import pandas as pd
 from skimage import io, measure
 from PIL import Image
+from collections import Counter
+
+from .fileio import get_id_from_filename
 
 
 def get_image_array(image_file, rgb_sum=False):
@@ -20,7 +23,7 @@ def get_image_array(image_file, rgb_sum=False):
     -------
     numpy.ndarray
         Grayscale image array
-        
+
     '''
 
     if rgb_sum:
@@ -293,6 +296,7 @@ def extract_blobs(image_file, threshold=20., rgb_sum=False, min_area=10.,
         prop_dict['image'] = group.get_sub_image(square=square,
                                  size=prop_dict['equivalent_diameter'])
         prop_dict['image_file'] = image_file
+        prop_dict['id'] = get_id_from_filename(image_file)
 
         if group_max_area and prop_dict['area'] > group_max_area:
             continue
@@ -302,3 +306,57 @@ def extract_blobs(image_file, threshold=20., rgb_sum=False, min_area=10.,
     region_prop_df = pd.DataFrame.from_records(group_properties)
 
     return region_prop_df
+
+
+def is_hotspot(x_coords, y_coords, threshold=3, radius=4.0):
+    '''Function to identify hot spot from a list of x-y coordinates
+
+    Parameters
+    ----------
+    x_coords : array-like
+        X-coordinates of blob groups. Note: x_coords and y_coords must have
+        the same shape.
+    y_coords : array-like
+        Y-coordinates of blob groups. Note: y_coords and x_coords must have
+        the same shape.
+    threshold : int, optional
+        Threshold number of counts to classify an x-y coordinate pair as a hot
+        spot. If a (x, y) coordinate pair occurs threshold or more times,
+        it is considered a hot spot (default is 3).
+    radius : float, optional
+        If an x-y pair is within radius number of pixels of a hot spot, it
+        is also considered a hot spot.
+
+    Returns
+    -------
+    is_hot_spot : numpy.ndarray
+        Boolean array that specifies whether or not a blob group is a hot spot.
+
+    '''
+
+    # Cast to numpy arrays for vectorizing distance computation later on
+    x_coords = np.asarray(x_coords)
+    y_coords = np.asarray(y_coords)
+    # Check that x_coords and y_coords are compatiable
+    if not x_coords.shape == y_coords.shape:
+        raise ValueError('x_coords and y_coords must have the same shape.')
+
+    # Get number of times each x-y pixel combination occurs
+    centers_list = [(int(x), int(y)) for x, y in zip(x_coords, y_coords)]
+    coord_counter = Counter(centers_list)
+    # Get hot spot coordinates based on number of times an x-y coordinate repeats
+    hotspots_coords = []
+    for coord, count in coord_counter.items():
+        if count >= threshold:
+            hotspots_coords.append(coord)
+
+    def get_distances(x1, y1, x2, y2):
+        return np.sqrt( (x1-x2)**2 + (y1-y2)**2 )
+
+    # Get mask for events within radius of hot spot
+    is_hot_spot = np.zeros(len(x_coords), dtype=bool)
+    for x_hot, y_hot in hotspots_coords:
+        distances = get_distances(x_coords, y_coords, x_hot, y_hot)
+        is_hot_spot = np.logical_or(is_hot_spot, (distances <= radius))
+
+    return is_hot_spot
