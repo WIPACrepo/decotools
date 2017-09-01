@@ -4,8 +4,9 @@ Author: James Bourbeau + Mr. Meehan
 '''
 
 from setuptools import setup, find_packages
+import decotools
 
-VERSION = '0.0.1'
+VERSION = decotools.__version__
 
 setup(
     name='decotools',
