@@ -60,6 +60,10 @@ def db_path_to_image_file(path, data_dir='/net/deco/deco_data'):
     date, basename = os.path.split(path)
     image_id = basename.split('_')[0]
     image_file = os.path.join(data_dir, date + 'Z', image_id+'.jpg')
+    # Check that image_file exists. If not, return nan (to be dropped later)
+    if not os.path.exists(image_file):
+        logger.debug('Image file {} doesn\'t exist'.format(image_file))
+        image_file = np.nan
 
     return image_file
 
@@ -185,12 +189,14 @@ def get_android_files(start_date=None, end_date=None, data_dir='/net/deco/deco_d
         return file_list
 
     # Filter out image files based on user input
-    df = (df.pipe(filter_dataframe, metadata_key='sensor_id', desired_values=device_id)
+    df = filter_dataframe(df, metadata_key='sensor_id', desired_values=device_id)
+
+    # Construct proper image file paths from the db 'path' column
+    df['image_file'] = df['path'].apply(db_path_to_image_file, data_dir=data_dir)
+    # Drop all image files that don't exist on the file system
+    df = (df.dropna(axis=0, how='any', subset=['image_file'])
             .reset_index(drop=True)
          )
-
-    # Construct proper image file paths from the db path
-    df['image_file'] = df['path'].apply(db_path_to_image_file)
 
     # Log info about images
     num_images_str = 'Found {} image files'.format(df.shape[0])
