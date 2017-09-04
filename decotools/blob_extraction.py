@@ -1,11 +1,9 @@
-
+from __future__ import division
 import numpy as np
 import pandas as pd
 from skimage import io, measure
 from PIL import Image
 from collections import Counter
-
-from .fileio import get_id_from_filename
 
 
 def get_image_array(image_file, rgb_sum=False):
@@ -296,7 +294,6 @@ def extract_blobs(image_file, threshold=20., rgb_sum=False, min_area=10.,
         prop_dict['image'] = group.get_sub_image(square=square,
                                  size=prop_dict['equivalent_diameter'])
         prop_dict['image_file'] = image_file
-        prop_dict['id'] = get_id_from_filename(image_file)
 
         if group_max_area and prop_dict['area'] > group_max_area:
             continue

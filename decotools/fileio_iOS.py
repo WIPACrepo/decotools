@@ -219,10 +219,9 @@ def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
         Numpy array containing files that match specified criteria
 
     '''
-
     # Validate that data_dir exists:
     if os.path.isdir(data_dir) == False:
-        raise IOError('data_dir, {}, cannot be located.'.format(data_dir))
+        raise IOError('data_dir, {}, does not exist.'.format(data_dir))
     # Validate include_min_bias and include_events:
     if not any([include_events, include_min_bias]):
         raise ValueError('At least one of include_events or include_min_bias '
@@ -239,10 +238,9 @@ def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
     # If no end_date specified, set as today's date
     if not end_date:
         end_date = time.strftime('%Y.%m.%d')
-    # If no start_date specified, set as some early date???
+    # If no start_date specified, set as some early date
     if not start_date:
         start_date = '2016.01.01'
-
     # Get list of dates between start_date and end_date
     try:
         dates = pd.date_range(start_date, end_date)
