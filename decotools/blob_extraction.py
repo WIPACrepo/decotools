@@ -4,6 +4,7 @@ import pandas as pd
 from skimage import io, measure
 from PIL import Image
 from collections import Counter, Iterable
+import dask
 from dask import delayed, multiprocessing
 from dask.diagnostics import ProgressBar
 
@@ -413,11 +414,15 @@ def get_intensity_metrics(files, rgb_sum=False, n_jobs=1):
         DataFrame with intensity metrics
 
     '''
+    if isinstance(files, str):
+        files = [files]
+
     image_intensities = [delayed(_get_image_intensity)(f) for f in files]
     image_intensities = delayed(pd.DataFrame.from_records)(image_intensities)
 
     with ProgressBar() as bar:
-        image_intensities = image_intensities.compute(get=multiprocessing.get,
+        get = dask.get if n_jobs == 1 else multiprocessing.get
+        image_intensities = image_intensities.compute(get=get,
                                                       num_workers=n_jobs)
 
     return image_intensities
