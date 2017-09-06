@@ -1,9 +1,11 @@
 
 import pytest
-from decotools.fileio_iOS import get_iOS_files
-from decotools.fileio_android import get_android_files
+from ..fileio_iOS import get_iOS_files
+from ..fileio_android import get_android_files
+
 
 file_getters = [get_iOS_files, get_android_files]
+
 
 def test_no_events_or_min_bias_fail():
     for file_getter in file_getters:
