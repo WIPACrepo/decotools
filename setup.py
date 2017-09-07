@@ -3,6 +3,13 @@ decotools
 Author: James Bourbeau + Mr. Meehan
 '''
 
+import sys
+if sys.version_info[0] < 3:
+    import __builtin__ as builtins
+else:
+    import builtins
+builtins.__DECOTOOLS_SETUP__ = True
+
 from setuptools import setup, find_packages
 import decotools
 
