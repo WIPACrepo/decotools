@@ -132,11 +132,6 @@ def get_android_files(start_date=None, end_date=None, data_dir='/net/deco/deco_d
         Numpy array containing files that match specified criteria
 
     '''
-    # Check that data_dir and db_file exist:
-    if not os.path.isdir(data_dir):
-        raise IOError('data_dir, {}, does not exist.'.format(data_dir))
-    if not os.path.exists(db_file):
-        raise IOError('db_file, {}, does not exist.'.format(db_file))
     # Validate include_min_bias and include_events:
     if not any([include_events, include_min_bias]):
         raise ValueError('At least one of include_events or include_min_bias '
@@ -163,6 +158,8 @@ def get_android_files(start_date=None, end_date=None, data_dir='/net/deco/deco_d
         raise ValueError('Invalid start_date or end_date entered')
 
     # Read in hourly dump of android database
+    if not os.path.exists(db_file):
+        raise IOError('db_file, {}, does not exist.'.format(db_file))
     df = pd.read_csv(db_file, parse_dates=['acquisition_time'])
     # Drop nan paths
     df = df.dropna(axis=0, how='any', subset=['path'])
@@ -192,6 +189,8 @@ def get_android_files(start_date=None, end_date=None, data_dir='/net/deco/deco_d
     df = filter_dataframe(df, metadata_key='sensor_id', desired_values=device_id)
 
     # Construct proper image file paths from the db 'path' column
+    if not os.path.isdir(data_dir):
+        raise IOError('data_dir, {}, does not exist.'.format(data_dir))
     df['image_file'] = df['path'].apply(db_path_to_image_file, data_dir=data_dir)
     # Drop all image files that don't exist on the file system
     df = (df.dropna(axis=0, how='any', subset=['image_file'])

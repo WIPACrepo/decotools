@@ -219,9 +219,6 @@ def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
         Numpy array containing files that match specified criteria
 
     '''
-    # Validate that data_dir exists:
-    if os.path.isdir(data_dir) == False:
-        raise IOError('data_dir, {}, does not exist.'.format(data_dir))
     # Validate include_min_bias and include_events:
     if not any([include_events, include_min_bias]):
         raise ValueError('At least one of include_events or include_min_bias '
@@ -249,6 +246,8 @@ def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
         raise ValueError('Invalid start_date or end_date entered')
 
     # Build up list of all image files within the start_date to end_date range
+    if not os.path.isdir(data_dir):
+        raise IOError('data_dir, {}, does not exist.'.format(data_dir))
     file_list = get_date_files(dates, data_dir, image_ext='png')
     if len(file_list) == 0:
         logger.warning('No files for found for the specified date range')
