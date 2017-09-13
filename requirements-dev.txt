@@ -1,3 +1,5 @@
 pytest
-mkdocs
-mkdocs-cinder
+Sphinx
+sphinx_rtd_theme
+numpydoc
+travis-sphinx
