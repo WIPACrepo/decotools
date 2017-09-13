@@ -1,6 +1,6 @@
 # decotools
 
-[![Build Status](https://travis-ci.org/WIPACrepo/decotools.svg?branch=set_up_travis)](https://travis-ci.org/WIPACrepo/decotools)
+[![Build Status](https://travis-ci.org/WIPACrepo/decotools.svg?branch=master)](https://travis-ci.org/WIPACrepo/decotools)
 ![Python 2.7](https://img.shields.io/badge/python-2.7-blue.svg)
 ![Python 3.6](https://img.shields.io/badge/python-3.6-blue.svg)
 
