@@ -23,9 +23,11 @@ class NoMetadataFile(Exception):
     '''Raised when no metadata file exists for an image file'''
     pass
 
+
 class EmptyMetadataFile(Exception):
     '''Raised when a metadata files is empty'''
     pass
+
 
 class UnknownMetadataIssue(Exception):
     '''Raised when there is an unknown issue parsing a metadata file'''
@@ -38,12 +40,14 @@ def parse_xmlfile(xml_file):
     try:
         xml_dict = plistlib.readPlist(xml_file)
     except IOError:
-        raise NoMetadataFile('No metadata file found for {}...'.format(xml_file))
+        raise NoMetadataFile('No metadata file found for {}'.format(xml_file))
     except ExpatError:
         if os.path.getsize(xml_file) == 0:
-            raise EmptyMetadataFile('The metadata file {} is empty'.format(xml_file))
+            raise EmptyMetadataFile(
+                    'The metadata file {} is empty'.format(xml_file))
         else:
-            raise UnknownMetadataIssue('Ran into an error parsing {}'.format(xml_file))
+            raise UnknownMetadataIssue(
+                    'Ran into an error parsing {}'.format(xml_file))
 
     return xml_dict
 
@@ -52,14 +56,15 @@ def image_file_to_xml_file(image_file):
     '''Function to return the xml file path for a corresponding image file path
     '''
     directory, image_file_basename = os.path.split(image_file)
-    xml_file_basename = 'metadata-' + image_file_basename.replace('.png', '.xml')
+    xml_file_basename = 'metadata-' + image_file_basename.replace('.png',
+                                                                  '.xml')
     xml_file = os.path.join(directory, xml_file_basename)
     if os.path.exists(xml_file):
         return xml_file
     else:
         # if xml_file does not contain 'metadata-' in the name, try without it
-        xml_file_basename = image_file_basename.replace('.png','.xml')
-        xml_file = os.path.join(directory,xml_file_basename)
+        xml_file_basename = image_file_basename.replace('.png', '.xml')
+        xml_file = os.path.join(directory, xml_file_basename)
         return xml_file
 
 
@@ -122,7 +127,8 @@ def get_metadata_dataframe(files, n_jobs=1):
 
     # Split files into batches to be processed (potentially) in parallel
     batches = np.array_split(files, min(100, len(files)))
-    df_list = [delayed(get_metadata_dataframe_batches)(batch) for batch in batches]
+    df_list = [delayed(get_metadata_dataframe_batches)(batch)
+               for batch in batches]
     df_merged = delayed(pd.concat)(df_list, ignore_index=True)
     print('Extracting metadata information:')
     with ProgressBar():
@@ -154,11 +160,12 @@ def filter_dataframe(df, metadata_key, desired_values=None):
     if not isinstance(df, pd.DataFrame):
         raise TypeError('df must be a pandas.DataFrame, '
                         'got {}'.format(type(df)))
-    if desired_values and not isinstance(desired_values, (list, tuple, set, np.ndarray)):
+    if desired_values and not isinstance(desired_values,
+                                         (list, tuple, set, np.ndarray)):
         raise TypeError('desired_values must be array-like')
 
     if desired_values is not None:
-        return df[ df[metadata_key].isin(desired_values) ]
+        return df[df[metadata_key].isin(desired_values)]
     else:
         return df
 
@@ -166,8 +173,9 @@ def filter_dataframe(df, metadata_key, desired_values=None):
 def get_date_files(dates, data_dir, image_ext='png'):
     file_list = []
     for date in dates:
-        date_files_pattern = os.path.join(data_dir, date, '*.{}'.format(image_ext))
-        file_list.extend( glob.glob(date_files_pattern) )
+        date_files_pattern = os.path.join(data_dir, date,
+                                          '*.{}'.format(image_ext))
+        file_list.extend(glob.glob(date_files_pattern))
     return file_list
 
 
@@ -261,24 +269,25 @@ def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
     elif not include_events and include_min_bias:
         file_list = [f for f in file_list if 'minBias' in f]
     if len(file_list) == 0:
-        logger.warning('No files remaining after event vs. minimum bias filtering')
+        logger.warning(
+            'No files remaining after event vs. minimum bias filtering')
         return file_list
 
     # If specified, filter out files based on device ID appropriately
     if device_id:
-        file_list = [f for f in file_list if get_id_from_filename(f) in device_id]
+        file_list = [f for f in file_list
+                     if get_id_from_filename(f) in device_id]
 
     if not any([phone_model, return_metadata]):
         file_array = np.asarray(file_list)
     else:
         # Construct DataFrame containing metadata to use for filtering
         df = get_metadata_dataframe(file_list, n_jobs=n_jobs)
-        num_image_files = df.shape[0]
 
         # Filter out image files based on user input
-        df = (df.pipe(filter_dataframe, metadata_key='Model', desired_values=phone_model)
-                .reset_index(drop=True)
-             )
+        df = (df.pipe(filter_dataframe, metadata_key='Model',
+                      desired_values=phone_model)
+                .reset_index(drop=True))
 
         # Log info about images
         num_images_str = 'Found {} image files'.format(df.shape[0])
@@ -289,7 +298,8 @@ def get_iOS_files(start_date=None, end_date=None, data_dir='/net/deco/iOSdata',
         for model in models:
             model_frac = np.sum(df['Model'] == model)/df.shape[0]
             models_str += '\n\t\t{} [ {:0.1%} ]'.format(model, model_frac)
-        logger.info('\n\t'.join(['',num_images_str, num_devices_str, models_str]))
+        logger.info(
+            '\n\t'.join(['', num_images_str, num_devices_str, models_str]))
 
         if return_metadata:
             return df
