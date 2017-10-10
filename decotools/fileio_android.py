@@ -31,11 +31,12 @@ def filter_dataframe(df, metadata_key, desired_values=None):
     if not isinstance(df, pd.DataFrame):
         raise TypeError('df must be a pandas.DataFrame, '
                         'got {}'.format(type(df)))
-    if desired_values and not isinstance(desired_values, (list, tuple, set, np.ndarray)):
+    if desired_values and not isinstance(desired_values,
+                                         (list, tuple, set, np.ndarray)):
         raise TypeError('desired_values must be array-like')
 
     if desired_values is not None:
-        return df[ df[metadata_key].isin(desired_values) ]
+        return df[df[metadata_key].isin(desired_values)]
     else:
         return df
 
@@ -89,7 +90,8 @@ def db_path_to_date(path, data_dir='/net/deco/deco_data'):
     return pd.to_datetime(date, utc=True)
 
 
-def get_android_files(start_date=None, end_date=None, data_dir='/net/deco/deco_data',
+def get_android_files(start_date=None, end_date=None,
+                      data_dir='/net/deco/deco_data',
                       db_file='/net/deco/db_hourly_safe.csv',
                       include_events=True, include_min_bias=False,
                       device_id=None, return_metadata=False, verbose=0):
@@ -116,7 +118,8 @@ def get_android_files(start_date=None, end_date=None, data_dir='/net/deco/deco_d
     device_id : str or array-like, optional
         Option to specify which devices you want to look at. Can
         either be a string, e.g. 'DECO-00000000-450a-7561-433f-0516209b4922',
-        or a list of device IDs, e.g. ['DECO-00000000-450a-7561-433f-0516209b4922',
+        or a list of device IDs, e.g.
+        ['DECO-00000000-450a-7561-433f-0516209b4922',
         'DECO-ffffffff-bd6f-e5fb-842b-56b10033c587']. Default is to include all
         device IDs.
     return_metadata : boolean, optional
@@ -182,26 +185,28 @@ def get_android_files(start_date=None, end_date=None, data_dir='/net/deco/deco_d
     elif not include_events and include_min_bias:
         df = df[min_bias_mask].reset_index(drop=True)
     if len(df) == 0:
-        logger.warning('No files remaining after event vs. minimum bias filtering')
-        return file_list
+        logger.warning(
+            'No files remaining after event vs. minimum bias filtering')
+        return df
 
     # Filter out image files based on user input
-    df = filter_dataframe(df, metadata_key='sensor_id', desired_values=device_id)
+    df = filter_dataframe(df, metadata_key='sensor_id',
+                          desired_values=device_id)
 
     # Construct proper image file paths from the db 'path' column
     if not os.path.isdir(data_dir):
         raise IOError('data_dir, {}, does not exist.'.format(data_dir))
-    df['image_file'] = df['path'].apply(db_path_to_image_file, data_dir=data_dir)
+    df['image_file'] = df['path'].apply(db_path_to_image_file,
+                                        data_dir=data_dir)
     # Drop all image files that don't exist on the file system
     df = (df.dropna(axis=0, how='any', subset=['image_file'])
-            .reset_index(drop=True)
-         )
+            .reset_index(drop=True))
 
     # Log info about images
     num_images_str = 'Found {} image files'.format(df.shape[0])
     n_devices = len(df['sensor_id'].unique())
     num_devices_str = 'Found {} unique devices'.format(n_devices)
-    logger.info('\n\t'.join(['',num_images_str, num_devices_str]))
+    logger.info('\n\t'.join(['', num_images_str, num_devices_str]))
 
     if return_metadata:
         return df

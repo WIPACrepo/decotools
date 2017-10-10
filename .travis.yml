@@ -10,6 +10,7 @@ install:
 # command to run tests
 script:
   - make tests
+  - flake8 --exclude */__init__.py decotools
   - travis-sphinx --nowarn --source=docs build
 
 after_success:
