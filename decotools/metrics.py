@@ -1,3 +1,4 @@
+from __future__ import division
 import numpy as np
 import pandas as pd
 from skimage import io, measure
@@ -68,6 +69,28 @@ def get_intensity_metrics(files, rgb_sum=False, n_jobs=1):
     return image_intensities
 
 
+def _get_cumulative_hist(hist):
+    '''Calculates cumulative histogram from differential histogram
+
+    Parameters
+    ----------
+    hist : np.array
+        Differential histogram of an image's RGB sum values
+
+    Returns
+    -------
+    cumulative_hist : np.array
+        Cumulative histogram of an image's RGB sum values.
+        Each bin contains N_pixels > RGB sum value.
+        
+    '''
+    cumulative_sum = np.cumsum(hist)
+    npixels = np.sum(hist)
+    cdf = cumulative_sum / npixels
+    cumulative_hist = (1.-cdf) * npixels
+    return cumulative_hist
+
+
 def get_rgb_hists(files, cumulative=False, n_jobs=1):
     '''Calculates histograms of the pixel RGB sum distributions 
 
@@ -77,16 +100,19 @@ def get_rgb_hists(files, cumulative=False, n_jobs=1):
         Image file path (or sequence of file paths) to be analyzed.
     cumulative : bool, optional
         Option to calculate cumulative histograms. Histogrammed quantities 
-        will be N pixels >= threshold.
+        will be N pixels > threshold.
     n_jobs : int, optional
         The number of jobs to run in parallel (default is 1).
 
     Returns
     -------
     hists : pandas.DataFrame
-        Dataframe containing histograms of pixel RGB sums
-        1 row for each image, 1 column for each RGB sum value
+        Dataframe containing histograms of pixel RGB sums.
+        Each row of the Dataframe corresponds to a single image
+        and each column corresponds to an RGB sum value. 
     '''
+    if isinstance(files, str):
+        files = [files]
 
     # Create integer bins spanning RGB sum values
     # np.histogram bins inclusively on the lower bin edge,
@@ -97,28 +123,14 @@ def get_rgb_hists(files, cumulative=False, n_jobs=1):
     # Load images 
     images = [delayed(get_image_array)(f, rgb_sum=True) for f in files]
     # Bin pixel intensities
-    histos = [delayed(np.histogram)(image.flatten(), bins=bins)[0] for image in images]
+    hists = [delayed(np.histogram)(image.flatten(), bins=bins)[0] for image in images]
+    if cumulative:
+        hists = [delayed(_get_cumulative_hist)(hist) for hist in hists]
     # Create dataframe
-    rgb_hists = delayed(pd.DataFrame.from_records)(histos)
+    rgb_hists = delayed(pd.DataFrame.from_records)(hists)
 
     with ProgressBar() as bar:
         get = dask.get if n_jobs == 1 else multiprocessing.get
         rgb_hists = rgb_hists.compute(get=get, num_workers=n_jobs)
 
     return rgb_hists
-
-if __name__ == '__main__':
-   
-    import decotools as dt
-
-    device_ids = {'Matt'    : 'BBAFF84F-7BC3-4774-A34F-8DD71C9E0B8F',
-                  'Justin'  : 'F216114B-8710-4790-A05D-D645C9C79C27',
-                  'Miles'   : 'D8D8E48D-7D3F-4693-A927-A402CF127D25'
-                 } 
-    device_id = device_ids['Matt']
-
-    files = dt.get_iOS_files(verbose=1, n_jobs=20, device_id=device_id, return_metadata=True,
-                             include_events=True, start_date='08.23.2017', end_date='08.31.2017')
-
-    histos = get_rgb_hists(files.image_file.values, n_jobs=20)
-    print histos
