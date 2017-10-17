@@ -85,6 +85,7 @@ def get_rgb_hists(files, cumulative=False, n_jobs=1):
     -------
     hists : pandas.DataFrame
         Dataframe containing histograms of pixel RGB sums
+        1 row for each image, 1 column for each RGB sum value
     '''
 
     # Create integer bins spanning RGB sum values
@@ -95,9 +96,9 @@ def get_rgb_hists(files, cumulative=False, n_jobs=1):
 
     # Load images 
     images = [delayed(get_image_array)(f, rgb_sum=True) for f in files]
-    # Bin images
+    # Bin pixel intensities
     histos = [delayed(np.histogram)(image.flatten(), bins=bins)[0] for image in images]
-    # Crate dataframe
+    # Create dataframe
     rgb_hists = delayed(pd.DataFrame.from_records)(histos)
 
     with ProgressBar() as bar:
