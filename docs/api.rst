@@ -25,3 +25,14 @@ Blob Extraction
 Finding interesting structure in images is done using the ``extract_blobs`` function.
 
 .. autofunction:: blob_extraction.extract_blobs
+
+
+=======
+Metrics
+=======
+
+Functions to calculate intensity metrics and histogram images are in the ``metrics`` module.
+
+.. autofunction:: metrics.get_intensity_metrics
+
+.. autofunction:: metrics.get_rgb_hists
