@@ -4,7 +4,7 @@ from collections import Counter
 import numpy as np
 from skimage.io import imsave
 
-from decotools.metrics import get_intensity_metrics
+from decotools.metrics import get_intensity_metrics, get_rgb_hists
 
 
 def test_get_intensity_metrics_no_files():
@@ -31,3 +31,15 @@ def test_get_intensity_metrics_columns(tmpdir):
     df_metrics = get_intensity_metrics(str(tmpfile))
 
     assert Counter(df_metrics.columns) == Counter(columns)
+
+
+def test_get_rgb_hists_shape(tmpdir):
+    # Create and save test images to temporary files
+    tmpfile_1 = tmpdir.join('temp_image_1.png')
+    imsave(str(tmpfile_1), np.random.random((5, 5, 4)))
+    tmpfile_2 = tmpdir.join('temp_image_2.png')
+    imsave(str(tmpfile_2), np.random.random((200, 100, 4)))
+
+    df_rgb_hists = get_rgb_hists([str(tmpfile_1), str(tmpfile_2)])
+
+    assert df_rgb_hists.shape == (2, 769)
