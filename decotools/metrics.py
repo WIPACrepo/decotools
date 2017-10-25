@@ -1,9 +1,6 @@
 from __future__ import division
 import numpy as np
 import pandas as pd
-from skimage import io, measure
-from PIL import Image
-from collections import Counter, Iterable
 import dask
 from dask import delayed, multiprocessing
 from dask.diagnostics import ProgressBar
@@ -53,7 +50,6 @@ def get_intensity_metrics(files, rgb_sum=False, n_jobs=1):
     -------
     image_intensities : pandas.DataFrame
         DataFrame with intensity metrics
-
     '''
     if isinstance(files, str):
         files = [files]
@@ -61,7 +57,7 @@ def get_intensity_metrics(files, rgb_sum=False, n_jobs=1):
     image_intensities = [delayed(_get_image_intensity)(f) for f in files]
     image_intensities = delayed(pd.DataFrame.from_records)(image_intensities)
 
-    with ProgressBar() as bar:
+    with ProgressBar():
         get = dask.get if n_jobs == 1 else multiprocessing.get
         image_intensities = image_intensities.compute(get=get,
                                                       num_workers=n_jobs)
@@ -82,7 +78,6 @@ def _get_cumulative_hist(hist):
     cumulative_hist : np.array
         Cumulative histogram of an image's RGB sum values.
         Each bin contains N_pixels > RGB sum value.
-        
     '''
     cumulative_sum = np.cumsum(hist)
     npixels = np.sum(hist)
@@ -92,14 +87,14 @@ def _get_cumulative_hist(hist):
 
 
 def get_rgb_hists(files, cumulative=False, n_jobs=1):
-    '''Calculates histograms of the pixel RGB sum distributions 
+    '''Calculates histograms of the pixel RGB sum distributions
 
     Parameters
     ----------
     files : str, sequence
         Image file path (or sequence of file paths) to be analyzed.
     cumulative : bool, optional
-        Option to calculate cumulative histograms. Histogrammed quantities 
+        Option to calculate cumulative histograms. Histogrammed quantities
         will be N pixels > threshold.
     n_jobs : int, optional
         The number of jobs to run in parallel (default is 1).
@@ -109,7 +104,7 @@ def get_rgb_hists(files, cumulative=False, n_jobs=1):
     hists : pandas.DataFrame
         Dataframe containing histograms of pixel RGB sums.
         Each row of the Dataframe corresponds to a single image
-        and each column corresponds to an RGB sum value. 
+        and each column corresponds to an RGB sum value.
     '''
     if isinstance(files, str):
         files = [files]
@@ -120,16 +115,17 @@ def get_rgb_hists(files, cumulative=False, n_jobs=1):
     rgb_max = 256*3
     bins = np.linspace(0, rgb_max+1, rgb_max+2)
 
-    # Load images 
+    # Load images
     images = [delayed(get_image_array)(f, rgb_sum=True) for f in files]
     # Bin pixel intensities
-    hists = [delayed(np.histogram)(image.flatten(), bins=bins)[0] for image in images]
+    hists = [delayed(np.histogram)(image.flatten(), bins=bins)[0]
+             for image in images]
     if cumulative:
         hists = [delayed(_get_cumulative_hist)(hist) for hist in hists]
     # Create dataframe
     rgb_hists = delayed(pd.DataFrame.from_records)(hists)
 
-    with ProgressBar() as bar:
+    with ProgressBar():
         get = dask.get if n_jobs == 1 else multiprocessing.get
         rgb_hists = rgb_hists.compute(get=get, num_workers=n_jobs)
 

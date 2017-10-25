@@ -4,9 +4,6 @@ import pandas as pd
 from skimage import io, measure
 from PIL import Image
 from collections import Counter, Iterable
-import dask
-from dask import delayed, multiprocessing
-from dask.diagnostics import ProgressBar
 
 
 def get_image_array(image_file, rgb_sum=False):
