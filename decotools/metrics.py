@@ -4,7 +4,7 @@ import pandas as pd
 import dask
 from dask import delayed, multiprocessing
 from dask.diagnostics import ProgressBar
-from blob_extraction import get_image_array
+from .blob_extraction import get_image_array
 
 
 def _get_image_intensity(image_file, rgb_sum=False):
