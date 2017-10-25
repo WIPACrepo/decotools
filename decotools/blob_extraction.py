@@ -66,7 +66,8 @@ class Blob(object):
         self.area = area
 
     def __repr__(self):
-        str_rep = 'Blob(xc={}, yc={}, area={})'.format(self.xc, self.yc, self.area)
+        str_rep = 'Blob(xc={}, yc={}, area={})'.format(self.xc, self.yc,
+                                                       self.area)
         return str_rep
 
     def length(self):
@@ -76,7 +77,7 @@ class Blob(object):
         xMax = self.x.max()
         yMin = self.y.min()
         yMax = self.y.max()
-        len_ = np.sqrt( (xMin - xMax)**2 + (yMin - yMax)**2 )
+        len_ = np.sqrt((xMin - xMax)**2 + (yMin - yMax)**2)
         return len_
 
     def distance(self, blob):
@@ -87,16 +88,16 @@ class Blob(object):
 
 def findblobs(image, threshold, min_area=2., max_area=1000.):
     '''Pass through an image and find a set of blobs/contours above a set
-       threshold value.  The min_area parameter is used to exclude blobs with an
-       area below this value.'''
+       threshold value.  The min_area parameter is used to exclude blobs with
+       an area below this value.'''
     blobs = []
     nx, ny = image.shape
 
     # Find contours using the Marching Squares algorithm in the scikit package.
     contours = measure.find_contours(image, threshold)
     for contour in contours:
-        y = contour[:,1]
-        x = contour[:,0]
+        y = contour[:, 1]
+        x = contour[:, 0]
         blob = Blob(x, y)
         if blob.area >= min_area and blob.area <= max_area:
             blobs.append(blob)
@@ -112,16 +113,17 @@ class BlobGroup(object):
         '''Initialize a list of stored blobs and the bounding rectangle which
         defines the group.'''
         self.blobs = []
-        self.xmin =  1e10
+        self.xmin = 1e10
         self.xmax = -1e10
-        self.ymin =  1e10
+        self.ymin = 1e10
         self.ymax = -1e10
         self.image = image
         self.xc = None
         self.yc = None
 
     def __repr__(self):
-        str_rep = 'BlobGroup(n_blobs={}, xc={}, yc={})'.format(len(self.blobs), self.xc, self.yc)
+        str_rep = 'BlobGroup(n_blobs={}, xc={}, yc={})'.format(
+                len(self.blobs), self.xc, self.yc)
         return str_rep
 
     def add_blob(self, blob):
@@ -132,8 +134,8 @@ class BlobGroup(object):
         self.xmax = max(self.xmax, blob.x.max())
         self.ymin = min(self.ymin, blob.y.min())
         self.ymax = max(self.ymax, blob.y.max())
-        self.xc = np.mean([blob.xc for blob in self.blobs])
-        self.yc = np.mean([blob.yc for blob in self.blobs])
+        self.xc = np.mean([b.xc for b in self.blobs])
+        self.yc = np.mean([b.yc for b in self.blobs])
 
     def get_bounding_box(self):
         '''Get the bounding rectangle of the group.'''
@@ -162,7 +164,7 @@ class BlobGroup(object):
 
         nx, ny = image.shape
         if size is None:
-            x0,x1,y0,y1 = self.get_square_bounding_box()
+            x0, x1, y0, y1 = self.get_square_bounding_box()
         else:
             xc, yc = self.xc, self.yc
             if isinstance(size, Iterable):
@@ -185,12 +187,11 @@ class BlobGroup(object):
 
         return image[i0:i1, j0:j1]
 
-
     def get_region_props(self, threshold, size=None):
-
         subimage = self.get_sub_image(size=size)
         labeled_image = subimage >= threshold
-        region_properties = measure.regionprops(labeled_image.astype(int), subimage)
+        region_properties = measure.regionprops(labeled_image.astype(int),
+                                                subimage)
 
         if len(region_properties) == 0:
             return {}
@@ -202,8 +203,8 @@ class BlobGroup(object):
 
 def group_blobs(image, blobs, max_dist):
     '''Given a list of blobs, group them by distance between the centroids of
-       any two blobs.  If the centroids are more distant than max_dist, create a
-       new blob group.'''
+       any two blobs.  If the centroids are more distant than max_dist, create
+       a new blob group.'''
     n = len(blobs)
     groups = []
     if n >= 1:
@@ -220,7 +221,7 @@ def group_blobs(image, blobs, max_dist):
             is_grouped = False
             for group in groups:
                 # Calculate distance measure for a blob and a blob group:
-                # blob just has to be < max_dist from any other blob in the group
+                # blob has to be < max_dist from any other blob in the group
                 for bj in group.blobs:
                     if bi.distance(bj) < max_dist:
                         group.add_blob(bi)
@@ -262,8 +263,8 @@ def extract_blobs(image_file, threshold=20., rgb_sum=False, min_area=10.,
         by less than max_dist, they are grouped together as a single blob
         (defualt: 5).
     group_max_area : float, optional
-        Maximum area for a blob group to be kept. This helps get rid of pathological
-        events in an image (default: None).
+        Maximum area for a blob group to be kept. This helps get rid of
+        pathological events in an image (default: None).
     size : {None, int, array-like of shape=(2,)}, optional
         Size of zoomed image of extracted blobs. If an integer is provided, the
         zoomed image will be a square box of size 2*size in each dimension. If
@@ -294,7 +295,8 @@ def extract_blobs(image_file, threshold=20., rgb_sum=False, min_area=10.,
     group_properties = []
     for group_idx, group in enumerate(groups):
         region_props = group.get_region_props(threshold, size=size)
-        prop_dict = {property_:region_props[property_] for property_ in region_props}
+        prop_dict = {property_: region_props[property_]
+                     for property_ in region_props}
         prop_dict['n_blobs'] = len(group.blobs)
         prop_dict['n_groups'] = len(groups)
         prop_dict['blob_idx'] = group_idx
@@ -351,14 +353,14 @@ def is_hotspot(x_coords, y_coords, threshold=3, radius=4.0):
     # Get number of times each x-y pixel combination occurs
     centers_list = [(int(x), int(y)) for x, y in zip(x_coords, y_coords)]
     coord_counter = Counter(centers_list)
-    # Get hot spot coordinates based on number of times an x-y coordinate repeats
+    # Get hot spot coordinates based on number of times x-y coordinates repeat
     hotspots_coords = []
     for coord, count in coord_counter.items():
         if count >= threshold:
             hotspots_coords.append(coord)
 
     def get_distances(x1, y1, x2, y2):
-        return np.sqrt( (x1-x2)**2 + (y1-y2)**2 )
+        return np.sqrt((x1-x2)**2 + (y1-y2)**2)
 
     # Get mask for events within radius of hot spot
     is_hot_spot = np.zeros(len(x_coords), dtype=bool)

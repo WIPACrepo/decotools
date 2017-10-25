@@ -10,7 +10,8 @@ except NameError:
     __DECOTOOLS_SETUP__ = False
 
 if __DECOTOOLS_SETUP__:
-    sys.stderr.write('\n***Partial import of decotools during the build process***\n')
+    sys.stderr.write(
+        '\n***Partial import of decotools during the build process***\n')
 else:
     from .fileio_iOS import get_iOS_files
     from .fileio_android import get_android_files

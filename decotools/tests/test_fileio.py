@@ -11,7 +11,8 @@ def test_no_events_or_min_bias_fail():
     for file_getter in file_getters:
         with pytest.raises(ValueError) as excinfo:
             file_getter(include_events=False, include_min_bias=False)
-        error = 'At least one of include_events or include_min_bias must be True.'
+        error = 'At least one of include_events or ' + \
+                'include_min_bias must be True.'
         assert error == str(excinfo.value)
 
 

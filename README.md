@@ -16,11 +16,12 @@ $ pip install git+https://github.com/WIPACrepo/decotools#egg=decotools
 
 For more information on how `pip` interacts with version control systems (like GitHub) see [this section of the pip documentation](https://pip.pypa.io/en/stable/reference/pip_install/#vcs-support).
 
+## Documentation
 
-**Note for contributers:**
+The documentation for `decotools` is available at https://wipacrepo.github.io/decotools/. 
 
-There are extra dependencies for developers (e.g. `pytest` for running test, `mkdocs` for building the documentation, etc.). These can be installed via
+## Contributing
 
-```bash
-$ pip install -r requirements-dev.txt
-```
+Contributions to `decotools` are welcome! Please see the [contributing guide](https://wipacrepo.github.io/decotools/contributing.html) for more information. 
+
+
