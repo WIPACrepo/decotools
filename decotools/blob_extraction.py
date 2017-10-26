@@ -4,9 +4,6 @@ import pandas as pd
 from skimage import io, measure
 from PIL import Image
 from collections import Counter, Iterable
-import dask
-from dask import delayed, multiprocessing
-from dask.diagnostics import ProgressBar
 
 
 def get_image_array(image_file, rgb_sum=False):
@@ -369,62 +366,3 @@ def is_hotspot(x_coords, y_coords, threshold=3, radius=4.0):
         is_hot_spot = np.logical_or(is_hot_spot, (distances <= radius))
 
     return is_hot_spot
-
-
-def _get_image_intensity(image_file, rgb_sum=False):
-    '''Function to calculate intensity metrics
-
-    Parameters
-    ----------
-    image_file : str
-        Image file to be analyzed.
-    rgb_sum : bool, optional
-        Option to use simple RGB sum for grayscale conversion (default is to
-        use weighted RGB sum).
-
-    Returns
-    -------
-    intensity_dict : dict
-        Dictionary with intensity metrics
-
-    '''
-    image = get_image_array(image_file, rgb_sum=rgb_sum)
-    intensity_dict = {'mean': image.mean(), 'max': image.max()}
-    for percentile in [16, 50, 84]:
-        key = 'percentile_{}'.format(percentile)
-        intensity_dict[key] = np.percentile(image, percentile)
-
-    return intensity_dict
-
-
-def get_intensity_metrics(files, rgb_sum=False, n_jobs=1):
-    '''Calculates various metrics related to the image intensity
-
-    Parameters
-    ----------
-    files : str, sequence
-        Image file path (or sequence of file paths) to be analyzed.
-    rgb_sum : bool, optional
-        Option to use simple RGB sum for grayscale conversion (default is to
-        use weighted RGB sum).
-    n_jobs : int, optional
-        The number of jobs to run in parallel (default is 1).
-
-    Returns
-    -------
-    image_intensities : pandas.DataFrame
-        DataFrame with intensity metrics
-
-    '''
-    if isinstance(files, str):
-        files = [files]
-
-    image_intensities = [delayed(_get_image_intensity)(f) for f in files]
-    image_intensities = delayed(pd.DataFrame.from_records)(image_intensities)
-
-    with ProgressBar():
-        get = dask.get if n_jobs == 1 else multiprocessing.get
-        image_intensities = image_intensities.compute(get=get,
-                                                      num_workers=n_jobs)
-
-    return image_intensities
