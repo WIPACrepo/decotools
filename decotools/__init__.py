@@ -16,5 +16,6 @@ else:
     from .fileio_iOS import get_iOS_files
     from .fileio_android import get_android_files
     from .blob_extraction import extract_blobs, is_hotspot
+    from .metrics import get_intensity_metrics, get_rgb_hists
 
 __version__ = '0.0.1'
