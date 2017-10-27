@@ -2,7 +2,6 @@
 import pytest
 from collections import Counter
 import numpy as np
-from skimage.io import imsave
 
 from decotools.metrics import get_intensity_metrics, get_rgb_hists
 from decotools.blob_extraction import get_image_array
