@@ -1,10 +1,10 @@
 
 import numpy as np
-from skimage.io import imsave
+from scipy.misc import imsave
 import py
 
 
-def save_test_images(tmpdir, n_images, shape=(10, 10)):
+def save_test_images(tmpdir, n_images, scale=1, shape=(10, 10)):
     '''Function to generate and save fake test images
 
     Parameters
@@ -14,6 +14,9 @@ def save_test_images(tmpdir, n_images, shape=(10, 10)):
         https://docs.pytest.org/en/latest/tmpdir.html for more information.
     n_images : int
         Number of test images to create.
+    scale : int, float, optional
+        Scale of test image RGB values. The RGB values will be in the range
+        (0, scale). Default is ``scale=1``.
     shape : array-like, shape=(2, ), optional
         Shape of test image. The first and second elements of shape will be
         the number of x and y pixels in the test image (default is (10, 10)).
@@ -33,7 +36,7 @@ def save_test_images(tmpdir, n_images, shape=(10, 10)):
     files = []
     for i in range(n_images):
         tmpfile = tmpdir.join('test_image_{}.png'.format(i))
-        imsave(str(tmpfile), np.random.random((nx, ny, 4)))
+        imsave(str(tmpfile), scale * np.random.random((nx, ny, 4)))
         files.append(str(tmpfile))
 
     return files
