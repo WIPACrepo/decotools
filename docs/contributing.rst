@@ -139,24 +139,41 @@ Now add your feature, bug fix, typo fix, etc.
 Step 7: Running tests with the new code
 =======================================
 
-Once your contribution has been added, you'll want to run the tests for this project to ensure that none of the code you added broke any tests. If you haven't already, make sure you have the necessary software installed for running the tests (pytest) via
+Once your contribution has been added, you'll want to run the tests for this project to ensure that none of the code you added broke any tests. If you haven't already, make sure you have the necessary software installed for running the tests (i.e. pytest) via
 
 .. code-block:: bash
 
-    pip install -r requirements-dev.txt
+    pip install -r requirements/test.txt
 
 
 Now the tests can be run by going to the root directory of your decotools repository and executing
 
 .. code-block:: bash
 
-    make tests
+    pytest decotools
+
+To run with code coverage use ``pytest --cov decotools``.
 
 =====================
 Step 8: Documentation
 =====================
 
-If necessary for your contribution, add the appropriate documentation to the files in the ``docs/`` directory
+If necessary for your contribution, add the appropriate documentation to the files in the ``docs/`` directory. The dependencies needed to build the documentation can be installed by running
+
+.. code-block:: bash
+
+    pip install -r requirements/docs.txt
+
+
+The documentation can then be built via
+
+.. code-block:: bash
+
+    cd docs
+    make html
+
+The built documentation will be placed in the ``_build/html`` directory.
+
 
 ========================================
 Step 9: Committing and uploading changes
