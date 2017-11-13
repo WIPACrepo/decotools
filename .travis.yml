@@ -1,17 +1,26 @@
 language: python
 python:
-  - "2.7"
-  - "3.6"
-  - "3.6-dev" # 3.6 development branch
-# command to install dependencies
+    - "2.7"
+    - "3.6"
+    - "3.6-dev"
 install:
-  - pip install .
-  - pip install -r requirements-dev.txt
-# command to run tests
+    - pip install .
+    - pip install -r requirements/docs.txt
+    - pip install -r requirements/test.txt
 script:
-  - make tests
-  - flake8 --exclude */__init__.py decotools
-  - travis-sphinx --nowarn --source=docs build
-
+    - pytest --cov=decotools decotools
+    - flake8 --exclude */__init__.py decotools
+    - bash ci/build_docs.sh
 after_success:
-    - travis-sphinx deploy
+    - pip install codecov
+    - codecov
+deploy:
+    provider: pages
+    skip_cleanup: true
+    github_token: $GITHUB_TOKEN
+    local_dir: docs/_build/html
+    target_branch: gh-pages
+    email: "github-pages-deploy@travis-ci.org"
+    on:
+        branch: master
+        python: "2.7"

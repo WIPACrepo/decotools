@@ -11,8 +11,6 @@
    :hidden:
 
    api
-   examples
-   changelog
    contributing
 
 .. toctree::

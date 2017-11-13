@@ -1,0 +1,6 @@
+numpy
+pandas
+scikit-image
+Pillow
+matplotlib
+dask[complete]
