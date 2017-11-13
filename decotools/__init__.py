@@ -17,5 +17,6 @@ else:
     from .fileio_android import get_android_files
     from .blob_extraction import extract_blobs, is_hotspot
     from .metrics import get_intensity_metrics, get_rgb_hists
+    from .convnet import CNN, process_image_files
 
 __version__ = '0.0.1'

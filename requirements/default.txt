@@ -4,3 +4,5 @@ scikit-image
 Pillow
 matplotlib
 dask[complete]
+keras
+scikit-learn
