@@ -200,12 +200,13 @@ class CNN(object):
         numpy.ndarray
             Array containing smoothed one-hot row-vector labels
         """
+        y = np.asarray(y)
         assert len(y.shape) == 2
         if 0 <= smooth_factor <= 1:
             y *= 1 - smooth_factor
             y += smooth_factor / y.shape[1]
         else:
-            raise Exception(
+            raise ValueError(
                     'Invalid label smoothing factor: {}'.format(smooth_factor))
         return y
 

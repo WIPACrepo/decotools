@@ -1,13 +1,2 @@
 comment:
-  layout: "reach, diff, flags, files"
-
-coverage:
-  status:
-    project:
-      default:
-        target: auto
-        threshold: 5%
-    patch:
-      default:
-        target: auto
-        threshold: 5%
+  layout: "diff, flags"
