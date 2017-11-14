@@ -52,6 +52,15 @@ The latest version of decotools, can be install directly from GitHub using ``pip
     $ pip install git+https://github.com/WIPACrepo/decotools#egg=decotools
 
 
+Decotools uses the Theano backend within the `Keras deep learning library <https://keras.io/>`_. To configure this backend, the ``KERAS_BACKEND`` environment variable should be set to ``theano``. For example,
+
+.. code-block:: bash
+
+    export KERAS_BACKEND=theano
+
+
+For more information on Keras backends see https://keras.io/backend/
+
 
 Indices and tables
 ==================

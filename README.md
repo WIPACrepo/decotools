@@ -14,14 +14,18 @@ The `decotools` Python package can be installed directly from GitHub via
 $ pip install git+https://github.com/WIPACrepo/decotools#egg=decotools
 ```
 
-For more information on how `pip` interacts with version control systems (like GitHub) see [this section of the pip documentation](https://pip.pypa.io/en/stable/reference/pip_install/#vcs-support).
+`decotools` uses the Theano backend within the [Keras deep learning library](https://keras.io/). To configure this backend, the `KERAS_BACKEND` environment variable should be set to `theano`. For example,
+
+```bash
+export KERAS_BACKEND=theano
+```
+
+For more information on Keras backends see https://keras.io/backend/
 
 ## Documentation
 
-The documentation for `decotools` is available at https://wipacrepo.github.io/decotools/. 
+The documentation for `decotools` is available at https://wipacrepo.github.io/decotools/.
 
 ## Contributing
 
-Contributions to `decotools` are welcome! Please see the [contributing guide](https://wipacrepo.github.io/decotools/contributing.html) for more information. 
-
-
+Contributions to `decotools` are welcome! Please see the [contributing guide](https://wipacrepo.github.io/decotools/contributing.html) for more information.
