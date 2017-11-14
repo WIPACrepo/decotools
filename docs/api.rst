@@ -37,3 +37,16 @@ Functions to calculate intensity metrics and histogram images are in the ``metri
 .. autofunction:: get_rgb_hists
 
 .. autofunction:: get_intensity_metrics
+
+
+====================
+Event classification
+====================
+.. currentmodule:: decotools.convnet
+
+CNN event classification is done using the ``CNN`` object.
+
+.. autoclass:: CNN
+    :members:
+    :inherited-members:
+    :undoc-members:

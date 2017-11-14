@@ -10,17 +10,18 @@ from keras.layers.advanced_activations import LeakyReLU
 from keras.constraints import maxnorm
 from keras.utils import to_categorical
 from keras.preprocessing.image import ImageDataGenerator
-from keras.callbacks import ModelCheckpoint
 from sklearn.model_selection import StratifiedKFold
 
 
 def get_crop_range(maxX, maxY, size=32):
-    """define region of image to crop"""
+    """Define region of image to crop
+    """
     return maxX-size, maxX+size, maxY-size, maxY+size
 
 
 def pass_edge_check(maxX, maxY, img_shape, crop_size=64):
-    """checks if image is on the edge of the sensor"""
+    """Checks if image is on the edge of the sensor
+    """
     x0, x1, y0, y1 = get_crop_range(maxX, maxY, size=crop_size/2)
     checks = np.array([x0 >= 0, x1 <= img_shape[0],
                        y0 >= 0, y1 <= img_shape[1]])
@@ -28,7 +29,8 @@ def pass_edge_check(maxX, maxY, img_shape, crop_size=64):
 
 
 def get_brightest_pixel(img):
-    """get brightest image pixel indices"""
+    """Get brightest image pixel indices
+    """
     img = np.array(img)
     summed_img = np.sum(img, axis=-1)
     return np.unravel_index(summed_img.argmax(), summed_img.shape)
@@ -58,45 +60,52 @@ def convert_images(images):
     return images
 
 
-def process_image_files(image_files):
+def process_image_files(image_files, size=32):
+    images = []
     for image_file in image_files:
         image = Image.open(image_file).convert('RGB')
         maxY, maxX = get_brightest_pixel(image)
-        if pass_edge_check(maxX, maxY, image.size):
-            x0, x1, y0, y1 = get_crop_range(maxX, maxY)
+        if pass_edge_check(maxX, maxY, image.size, crop_size=2*size):
+            x0, x1, y0, y1 = get_crop_range(maxX, maxY, size=size)
             cropped_img = image.crop((x0, y0, x1, y1))
-            gray_image = convert_images(cropped_img)
-            yield gray_image
+            cropped_img = np.asarray(cropped_img)
+            images.append(cropped_img)
         else:
-            yield None
+            images.append(None)
+
+    scaled_images = convert_images(images)
+
+    return scaled_images
 
 
 class CNN(object):
-    """class for CNN training and predictions"""
+    """CNN class
+
+    Parameters
+    ----------
+    weights_file : str, optional
+        Path and file name of an hdf5 file containing the trained model
+        weights to be used by the CNN. (default: None)
+    model_file : str, optional
+        Path and file name of an hdf5 file containing a trained model.
+        Typically, this should only be used when continuing an existing
+        training session. (default: None)
+    custom_model : keras model, optional
+        User-defined, compiled keras model to be used in place of the
+        default (default: None)
+    training : bool, optional
+        If True, initializes the model structure used for training. If
+        False, initializes the model structure used for predictions.
+        (default: False)
+    n_classes : int
+        Number of classes to be used by the CNN. (default: 4)
+
+    """
     def __init__(self, weights_file=None, model_file=None, custom_model=None,
                  training=False, n_classes=4):
-        """
-        Initialize CNN class
-
-        Parameters
-        ----------
-        weights_file : str, optional
-            Path and file name of an hdf5 file containing the trained model
-            weights to be used by the CNN. (default: None)
-        model_file : str, optional
-            Path and file name of an hdf5 file containing a trained model.
-            Typically, this should only be used when continuing an existing
-            training session. (default: None)
-        custom_model : keras model, optional
-            User-defined, compiled keras model to be used in place of the
-            default (default: None)
-        training : bool, optional
-            If True, initializes the model structure used for training. If
-            False, initializes the model structure used for predictions.
-            (default: False)
-        n_classes : int
-            Number of classes to be used by the CNN. (default: 4)
-        """
+        self.weights_file = weights_file
+        self.model_file = model_file
+        self.custom_model = custom_model
         self.n_classes = n_classes
         self.training = training
         self.train_indices = []
@@ -110,8 +119,17 @@ class CNN(object):
         if model_file:
             self._load_model(model_file)
 
+    def __repr__(self):
+        attributes = ['weights_file', 'model_file', 'custom_model',
+                      'training', 'n_classes']
+        attr_str = ['{}={}'.format(att, getattr(self, att, None))
+                    for att in attributes]
+        rep = 'CNN({})'.format(', '.join(attr_str))
+        return rep
+
     def _build_model(self):
-        """ Define CNN model structure """
+        """ Define CNN model structure
+        """
         self.model = Sequential()
 
         if self.training:
@@ -162,7 +180,8 @@ class CNN(object):
                            metrics=['accuracy'])
 
     def _calculate_class_weights(self, labels):
-        """ calculate class weights to be used for training """
+        """ calculate class weights to be used for training
+        """
         classes = np.arange(self.n_classes)
         counts = np.array([])
         for i in classes:
@@ -171,14 +190,16 @@ class CNN(object):
         self.class_weights = dict(zip(classes, counts))
 
     def _load_model(self, model):
-        """ Load an existing model structure and weights """
+        """ Load an existing model structure and weights
+        """
         if os.path.isfile(model):
             self.model = load_model(model)
         else:
             raise IOError('No model file found for {}...'.format(model))
 
     def _load_weights(self, weights):
-        """ Load trained model weights; assumes default model structure """
+        """ Load trained model weights; assumes default model structure
+        """
         if os.path.isfile(weights):
             self.model.load_weights(weights)
         else:
@@ -211,8 +232,7 @@ class CNN(object):
         return y
 
     def evaluate(self, images, labels, batch_size=32, verbose=0):
-        """
-        Evaluate accuracy and loss of model predictions
+        """Evaluate accuracy and loss of model predictions
 
         Parameters
         ----------
@@ -237,8 +257,7 @@ class CNN(object):
         return score
 
     def model_summary(self):
-        """
-        Print summary of currently loaded model
+        """ Print summary of currently loaded model
         """
         print(self.model.summary())
 
@@ -267,17 +286,15 @@ class CNN(object):
         return self.model.predict(images, batch_size=batch_size,
                                   verbose=verbose)
 
-    def train(self, train_images, train_labels, test_images, test_labels,
-              batch_size=32, seed=None, epochs=10, initial_epoch=0,
-              smooth_factor=None, check_point=True,
-              check_point_weights_only=True, horizontal_flip=True,
-              vertical_flip=True, width_shift_range=0.08,
-              height_shift_range=0.08, rotation_range=180.,
-              zoom_range=[0.9, 1.1], fill_mode="constant", cval=0,
-              shuffle=True, save_model=None, save_weights=None,
-              save_history=None, output_dir=None):
-        """
-        Train CNN
+    def fit(self, train_images, train_labels, test_images, test_labels,
+            batch_size=32, seed=None, epochs=10, initial_epoch=0,
+            smooth_factor=None, horizontal_flip=True,
+            vertical_flip=True, width_shift_range=0.08,
+            height_shift_range=0.08, rotation_range=180.,
+            zoom_range=(0.9, 1.1), fill_mode='constant', cval=0,
+            shuffle=True, save_model=None, save_weights=None,
+            save_history=None, output_dir=None, verbose=False):
+        """Train CNN
 
         Parameters
         ----------
@@ -306,15 +323,6 @@ class CNN(object):
             Level of smoothing to apply to one-hot label vector. Ex.
             smooth_factor of 0.004 applied to [0, 1, 0, 0], results in
             [0.001, 0.997, 0.001, 0.001]. (default: None)
-        check_point : bool
-            If True, saves a running copy of the model corresponding to the
-            lowest validation loss epoch. Each time a new low is reached, the
-            previous best model is over-written by the new one. Model saved as
-            'best_checkpointed_model.h5'. (default: True)
-        check_point_weights_only : bool
-            If True, then only the model's weights will be saved, else the
-            full model is saved. Ignored if check_point = False.
-            (default: True)
         horizontal_flip : bool
             Randomly flip inputs horizontally. (default: True)
         vertical_flip : bool
@@ -352,10 +360,28 @@ class CNN(object):
         output_dir : str
             If specified, all model outputs will be saved to the specified
             directory. (default: current working directory)
+        verbose : bool, optional
+            Option for verbose output.
+
+        Returns
+        -------
+        self : CNN
         """
+        # Validate user input
         if not self.training:
             raise ValueError('CNN class initialized with training=\'False\','
                              'must be \'True\'')
+
+        if not train_images.shape[0] == train_labels.shape[0]:
+            raise ValueError('The number of training labels does not match '
+                             'the number of training images')
+        if not test_images.shape[0] == test_labels.shape[0]:
+            raise ValueError('The number of testing labels does not match '
+                             'the number of testing images')
+
+        if batch_size > train_images.shape[0]:
+            raise ValueError(
+                    'batch_size must be <= the number of training images')
 
         if seed:
             np.random.seed(seed)
@@ -372,15 +398,6 @@ class CNN(object):
         if smooth_factor:
             train_labels = self._smooth_labels(train_labels, smooth_factor)
         test_labels = to_categorical(test_labels, self.n_classes)
-
-        # Setup checkpointer
-        checkpointer = None
-        if check_point:
-            filepath = '{}/best_checkpointed_model.h5'.format(output_dir)
-            checkpointer = ModelCheckpoint(
-                            filepath, monitor='val_loss', verbose=0,
-                            save_weights_only=check_point_weights_only,
-                            save_best_only=True, mode='auto')
 
         # Preprocess images
         datagen = ImageDataGenerator(
@@ -405,13 +422,13 @@ class CNN(object):
                         epochs=epochs,
                         class_weight=self.class_weights,
                         validation_data=(test_images, test_labels),
-                        callbacks=[checkpointer],
                         initial_epoch=initial_epoch)
 
         # Evaluate  model
         score = self.model.evaluate(test_images, test_labels, verbose=0)
-        print('Final test loss:', score[0])
-        print('Final test accuracy:', score[1])
+        if verbose:
+            print('Final test loss:', score[0])
+            print('Final test accuracy:', score[1])
 
         # Save model, weights, history
         if save_model:
@@ -428,18 +445,19 @@ class CNN(object):
                        delimiter=',',
                        header='acc,val_acc,loss,val_loss')
 
-    def train_with_kfold(self, images, labels, k_folds=10, seed=None,
-                         shuffle=True, batch_size=32, epochs=10,
-                         initial_epoch=0, smooth_factor=None, check_point=True,
-                         check_point_weights_only=True, horizontal_flip=True,
-                         vertical_flip=True, width_shift_range=0.08,
-                         height_shift_range=0.08, rotation_range=180.,
-                         zoom_range=[0.9, 1.1], fill_mode="constant", cval=0,
-                         save_model=None, save_weights=None, save_history=None,
-                         output_dir=None):
+        return self
 
-        """
-        Train CNN using kfold cross validation
+    def fit_with_kfold(self, images, labels, k_folds=10, seed=None,
+                       shuffle=True, batch_size=32, epochs=10,
+                       initial_epoch=0, smooth_factor=None,
+                       horizontal_flip=True, vertical_flip=True,
+                       width_shift_range=0.08, height_shift_range=0.08,
+                       rotation_range=180., zoom_range=(0.9, 1.1),
+                       fill_mode="constant", cval=0, save_model=None,
+                       save_weights=None, save_history=None, output_dir=None,
+                       verbose=False):
+
+        """Train CNN using kfold cross validation
 
         Parameters
         ----------
@@ -466,16 +484,6 @@ class CNN(object):
             Level of smoothing to apply to one-hot label vector. Ex.
             smooth_factor of 0.004 applied to [0, 1, 0, 0], results in
             [0.001, 0.997, 0.001, 0.001]. (default: None)
-        check_point : bool
-            If True, saves a running copy of the model corresponding to the
-            lowest validation loss epoch. Each time a new low is reached, the
-            previous best model is over-written by the new one. Model saved
-            as 'best_checkpointed_model_k.h5', where k is the current fold
-            being trained. (default: True)
-        check_point_weights_only : bool
-            If True, then only the model's weights will be saved, else the
-            full model is saved. Ignored if check_point = False.
-            (default: True)
         horizontal_flip : bool
             Randomly flip inputs horizontally. (default: True)
         vertical_flip : bool
@@ -517,11 +525,23 @@ class CNN(object):
         output_dir : str
             If specified, all model outputs will be saved to the specified
             directory. (default: current working directory)
+
+        Returns
+        -------
+        self : CNN
         """
+        # Validate user input
         if not self.training:
             raise ValueError('CNN class initialized with training=\'False\','
                              'must be \'True\'')
 
+        if not images.shape[0] == labels.shape[0]:
+            raise ValueError('The number of training labels does not match '
+                             'the number of training images')
+
+        if batch_size > images.shape[0]:
+            raise ValueError(
+                    'batch_size must be <= the number of training images')
         if seed:
             np.random.seed(seed)
 
@@ -541,7 +561,8 @@ class CNN(object):
         skf.get_n_splits(images, labels)
 
         for i, indices in enumerate(skf.split(images, labels)):
-            print('Training Fold Number {}'.format(i))
+            if verbose:
+                print('Training Fold Number {}'.format(i))
 
             # Get testing and training split for this fold
             train_index, test_index = indices
@@ -555,16 +576,6 @@ class CNN(object):
             if smooth_factor:
                 train_labels = self._smooth_labels(train_labels, smooth_factor)
             test_labels = to_categorical(test_labels, self.n_classes)
-
-            # Setup checkpointer
-            checkpointer = None
-            if check_point:
-                filepath = os.path.join(
-                        output_dir, 'best_checkpointed_model_{}.h5'.format(i))
-                checkpointer = ModelCheckpoint(
-                                filepath, monitor='val_loss', verbose=0,
-                                save_weights_only=check_point_weights_only,
-                                save_best_only=True, mode='auto')
 
             # Preprocess images
             datagen = ImageDataGenerator(
@@ -585,17 +596,17 @@ class CNN(object):
                         batch_size=batch_size,
                         seed=seed,
                         shuffle=shuffle),
-                        steps_per_epoch=train_images.shape[0]//batch_size,
+                        steps_per_epoch=train_images.shape[0] // batch_size,
                         epochs=epochs,
                         class_weight=self.class_weights,
                         validation_data=(test_images, test_labels),
-                        callbacks=[checkpointer],
                         initial_epoch=initial_epoch)
 
             # Evaluate  model
             score = self.model.evaluate(test_images, test_labels, verbose=0)
-            print('Final test loss:', score[0])
-            print('Final test accuracy:', score[1])
+            if verbose:
+                print('Final test loss:', score[0])
+                print('Final test accuracy:', score[1])
 
             # Save model, weights, history
             if save_model:
@@ -625,3 +636,5 @@ class CNN(object):
 
         self.train_indices = np.asarray(self.train_indices)
         self.test_indices = np.asarray(self.test_indices)
+
+        return self
