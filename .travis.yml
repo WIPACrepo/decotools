@@ -12,7 +12,7 @@ install:
     - pip install -r requirements/test.txt
 script:
     - pytest --cov=decotools decotools
-    - flake8 --exclude */__init__.py decotools
+    - flake8 decotools
     - bash ci/build_docs.sh
 after_success:
     - pip install codecov

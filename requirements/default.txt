@@ -7,3 +7,4 @@ dask[complete]
 keras
 Theano==0.9
 scikit-learn
+h5py
