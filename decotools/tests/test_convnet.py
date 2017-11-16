@@ -122,11 +122,12 @@ def test_get_crop_range():
 
 def test_process_image_files_edge_filter(tmpdir):
     # Create and save a test images
-    files = save_test_images(tmpdir, n_images=10, scale=50, shape=(500, 500))
+    files = save_test_images(tmpdir, n_images=10, scale=50, shape=(500, 500),
+                             seed=23)
 
     images, edge_filter = process_image_files(files, return_edge_filter=True)
-    test_filter = [True, True, False, False, True, True, True, False,
-                   True, True]
+    test_filter = [False, True, True, True, True, True, True, False,
+                   False, True]
     np.testing.assert_array_equal(test_filter, edge_filter)
 
 
