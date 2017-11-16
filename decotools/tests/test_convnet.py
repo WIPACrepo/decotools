@@ -2,7 +2,9 @@
 import pytest
 import numpy as np
 
-from decotools.convnet import CNN, get_brightest_pixel, get_crop_range
+from decotools.convnet import (CNN, get_brightest_pixel, get_crop_range,
+                               process_image_files)
+from decotools.tests.utils import save_test_images
 
 
 default_cnn = CNN()
@@ -116,3 +118,26 @@ def test_get_crop_range():
     size = 17
     result = (max_x-size, max_x+size, max_y-size, max_y+size)
     assert result == get_crop_range(max_x, max_y, size=size)
+
+
+def test_process_image_files_edge_filter(tmpdir):
+    # Create and save a test images
+    files = save_test_images(tmpdir, n_images=10, scale=50, shape=(500, 500),
+                             seed=23)
+
+    images, edge_filter = process_image_files(files, return_edge_filter=True)
+    test_filter = [False, True, True, True, True, True, True, False,
+                   False, True]
+    np.testing.assert_array_equal(test_filter, edge_filter)
+
+
+def test_process_image_files_shape(tmpdir):
+    # Create and save a test images
+    n_images = 20
+    files = save_test_images(tmpdir, n_images=n_images, scale=50,
+                             shape=(500, 500))
+    size = 32
+    images, edge_filter = process_image_files(files, size=size,
+                                              return_edge_filter=True)
+    test_shape = (edge_filter.sum(), 2*size, 2*size, 1)
+    np.testing.assert_array_equal(images.shape, test_shape)

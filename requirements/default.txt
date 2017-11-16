@@ -1,9 +1,9 @@
-numpy
+numpy==1.13.0
 pandas
 scikit-image
 Pillow
 matplotlib
 dask[complete]
 keras
-Theano
+Theano==0.9
 scikit-learn
