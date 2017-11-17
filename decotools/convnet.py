@@ -454,7 +454,7 @@ class CNN(object):
         checkpointer = None
         if check_point:
             filepath = '{}/best_checkpointed_model.h5'.format(output_dir)
-            checkpointer = [ModelCheckpoint(filepath, 
+            checkpointer = [ModelCheckpoint(filepath,
                             monitor='val_loss', verbose=0,
                             save_weights_only=check_point_weights_only,
                             save_best_only=True, mode='auto')]
