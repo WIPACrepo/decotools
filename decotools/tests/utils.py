@@ -4,7 +4,7 @@ from scipy.misc import imsave
 import py
 
 
-def save_test_images(tmpdir, n_images, scale=1, shape=(10, 10)):
+def save_test_images(tmpdir, n_images, scale=1, shape=(10, 10), seed=2):
     '''Function to generate and save fake test images
 
     Parameters
@@ -20,6 +20,9 @@ def save_test_images(tmpdir, n_images, scale=1, shape=(10, 10)):
     shape : array-like, shape=(2, ), optional
         Shape of test image. The first and second elements of shape will be
         the number of x and y pixels in the test image (default is (10, 10)).
+    seed : int, optional
+        Random number generator seed to be passed to numpy.random.seed
+        (default is 2).
 
     Returns
     -------
@@ -31,6 +34,7 @@ def save_test_images(tmpdir, n_images, scale=1, shape=(10, 10)):
     if not len(shape) == 2:
         raise ValueError(
             'Shape should only have two items, found {}'.format(len(shape)))
+    np.random.seed(seed)
     # Create and save a test image to a temporary file
     nx, ny = shape
     files = []

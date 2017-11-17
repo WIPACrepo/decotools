@@ -1,5 +1,6 @@
 from __future__ import division, print_function
 import os
+import sys
 import numpy as np
 from PIL import Image
 import keras
@@ -61,9 +62,37 @@ def convert_images(images):
     return images
 
 
-def process_image_files(image_files, size=32):
+def process_image_files(image_files, size=32, return_edge_filter=False,
+                        verbose=False):
+    """Process image files for use in CNN
+
+    Parameters
+    ----------
+    image_files : array_like
+        Iterable of image file paths
+    size : int, optional
+        Size to zoom in on brightest pixel. Note that the shape of the zoomed
+        image will be of shape ``2*size``-by-``2*size``. So for a 64-by-64
+        zoomed image, use ``size=32`` (default is 32).
+    return_edge_filter : bool, optional
+        Option to return a boolean array indicating which images passed the
+        edge filter (default is False).
+    verbose : bool, optional
+        Option for verbose output (default is False).
+
+    Returns
+    -------
+    images : numpy.ndarray
+        Array of normalized, grayscale images with shape:(n_images, n_rows,
+        n_cols, 1)
+    edge_filter : numpy.ndarray
+        Only returned if ``return_edge_filter`` is True. Boolean array
+        indicating which image files passed the edge filter.
+    """
     images = []
-    for image_file in image_files:
+    edge_filter = np.ones_like(image_files, dtype=bool)
+    n_edge = 0
+    for idx, image_file in enumerate(image_files):
         image = Image.open(image_file).convert('RGB')
         maxY, maxX = get_brightest_pixel(image)
         if pass_edge_check(maxX, maxY, image.size, crop_size=2*size):
@@ -72,11 +101,23 @@ def process_image_files(image_files, size=32):
             cropped_img = np.asarray(cropped_img)
             images.append(cropped_img)
         else:
-            images.append(None)
+            n_edge += 1
+            edge_filter[idx] = False
+            continue
+        if verbose:
+            edge_str = ('\rNumber of images that failed the edge '
+                        'filter: {} of {}'.format(n_edge, idx+1))
+            sys.stdout.write(edge_str)
+            sys.stdout.flush()
 
-    scaled_images = convert_images(images)
+    images = convert_images(images)
 
-    return scaled_images
+    if return_edge_filter:
+        output = images, edge_filter
+    else:
+        output = images
+
+    return output
 
 
 class CNN(object):
