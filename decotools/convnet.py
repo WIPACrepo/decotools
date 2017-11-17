@@ -365,12 +365,12 @@ class CNN(object):
         verbose : bool, optional
             Option for verbose output.
         check_point : bool
-            If True, saves a running copy of the model corresponding to the 
-            lowest validation loss epoch. Each time a new low is reached, the 
-            previous best model is over-written by the new one. Model saved as 
-            'best_checkpointed_model.h5'. (default: True) 
+            If True, saves a running copy of the model corresponding to the
+            lowest validation loss epoch. Each time a new low is reached, the
+            previous best model is over-written by the new one. Model saved as
+            'best_checkpointed_model.h5'. (default: True)
         check_point_weights_only : bool
-            If True, then only the model's weights will be saved, else the full 
+            If True, then only the model's weights will be saved, else the full
             model is saved. Ignored if check_point = False. (default: True)
 
         Returns
@@ -409,8 +409,8 @@ class CNN(object):
             train_labels = self._smooth_labels(train_labels, smooth_factor)
         test_labels = to_categorical(test_labels, self.n_classes)
 
-        #setup checkpointer
-        checkpointer=None
+        # Setup checkpointer
+        checkpointer = None
         if check_point:
             filepath = '{}/best_checkpointed_model.h5'.format(output_dir)
             checkpointer = [ModelCheckpoint(filepath, 
@@ -475,7 +475,7 @@ class CNN(object):
                        rotation_range=180., zoom_range=(0.9, 1.1),
                        fill_mode="constant", cval=0, save_model=None,
                        save_weights=None, save_history=None, output_dir=None,
-                       verbose=False, check_point=True, 
+                       verbose=False, check_point=True,
                        check_point_weights_only=True):
 
         """Train CNN using kfold cross validation
@@ -546,14 +546,16 @@ class CNN(object):
         output_dir : str
             If specified, all model outputs will be saved to the specified
             directory. (default: current working directory)
+        verbose : bool, optional
+            Option for verbose output.
         check_point : bool
-            If True, saves a running copy of the model corresponding to the 
-            lowest validation loss epoch. Each time a new low is reached, the 
-            previous best model is over-written by the new one. Model saved as 
-            'best_checkpointed_model_k.h5', where k is the current fold being 
+            If True, saves a running copy of the model corresponding to the
+            lowest validation loss epoch. Each time a new low is reached, the
+            previous best model is over-written by the new one. Model saved as
+            'best_checkpointed_model_k.h5', where k is the current fold being
             trained. (default: True)
         check_point_weights_only : bool
-            If True, then only the model's weights will be saved, else the full 
+            If True, then only the model's weights will be saved, else the full
             model is saved. Ignored if check_point = False. (default: True)
 
         Returns
@@ -607,8 +609,8 @@ class CNN(object):
                 train_labels = self._smooth_labels(train_labels, smooth_factor)
             test_labels = to_categorical(test_labels, self.n_classes)
 
-            #setup checkpointer
-            checkpointer=None
+            # Setup checkpointer
+            checkpointer = None
             if check_point:
                 filepath = '{}/best_checkpointed_model.h5'.format(output_dir)
                 checkpointer = [ModelCheckpoint(filepath,
