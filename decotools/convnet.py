@@ -653,7 +653,8 @@ class CNN(object):
             # Setup checkpointer
             checkpointer = None
             if check_point:
-                filepath = os.path.join(output_dir, 'best_checkpointed_model.h5')
+                filepath = os.path.join(output_dir,
+                                        'best_checkpointed_model.h5')
                 checkpointer = [ModelCheckpoint(filepath,
                                 monitor='val_loss', verbose=0,
                                 save_weights_only=check_point_weights_only,
