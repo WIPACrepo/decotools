@@ -11,6 +11,7 @@ from keras.layers.advanced_activations import LeakyReLU
 from keras.constraints import maxnorm
 from keras.utils import to_categorical
 from keras.preprocessing.image import ImageDataGenerator
+from keras.callbacks import ModelCheckpoint
 from sklearn.model_selection import StratifiedKFold
 
 
@@ -334,7 +335,8 @@ class CNN(object):
             height_shift_range=0.08, rotation_range=180.,
             zoom_range=(0.9, 1.1), fill_mode='constant', cval=0,
             shuffle=True, save_model=None, save_weights=None,
-            save_history=None, output_dir=None, verbose=False):
+            save_history=None, output_dir=None, verbose=False,
+            check_point=False, check_point_weights_only=True):
         """Train CNN
 
         Parameters
@@ -403,6 +405,14 @@ class CNN(object):
             directory. (default: current working directory)
         verbose : bool, optional
             Option for verbose output.
+        check_point : bool
+            If True, saves a running copy of the model corresponding to the
+            lowest validation loss epoch. Each time a new low is reached, the
+            previous best model is over-written by the new one. Model saved as
+            'best_checkpointed_model.h5'. (default: False)
+        check_point_weights_only : bool
+            If True, then only the model's weights will be saved, else the full
+            model is saved. Ignored if check_point = False. (default: True)
 
         Returns
         -------
@@ -440,6 +450,15 @@ class CNN(object):
             train_labels = self._smooth_labels(train_labels, smooth_factor)
         test_labels = to_categorical(test_labels, self.n_classes)
 
+        # Setup checkpointer
+        checkpointer = None
+        if check_point:
+            filepath = os.path.join(output_dir, 'best_checkpointed_model.h5')
+            checkpointer = [ModelCheckpoint(filepath,
+                            monitor='val_loss', verbose=0,
+                            save_weights_only=check_point_weights_only,
+                            save_best_only=True, mode='auto')]
+
         # Preprocess images
         datagen = ImageDataGenerator(
                         horizontal_flip=horizontal_flip,
@@ -462,6 +481,7 @@ class CNN(object):
                         steps_per_epoch=train_images.shape[0] // batch_size,
                         epochs=epochs,
                         class_weight=self.class_weights,
+                        callbacks=checkpointer,
                         validation_data=(test_images, test_labels),
                         initial_epoch=initial_epoch)
 
@@ -496,7 +516,8 @@ class CNN(object):
                        rotation_range=180., zoom_range=(0.9, 1.1),
                        fill_mode="constant", cval=0, save_model=None,
                        save_weights=None, save_history=None, output_dir=None,
-                       verbose=False):
+                       verbose=False, check_point=False,
+                       check_point_weights_only=True):
 
         """Train CNN using kfold cross validation
 
@@ -566,6 +587,17 @@ class CNN(object):
         output_dir : str
             If specified, all model outputs will be saved to the specified
             directory. (default: current working directory)
+        verbose : bool, optional
+            Option for verbose output.
+        check_point : bool
+            If True, saves a running copy of the model corresponding to the
+            lowest validation loss epoch. Each time a new low is reached, the
+            previous best model is over-written by the new one. Model saved as
+            'best_checkpointed_model_k.h5', where k is the current fold being
+            trained. (default: False)
+        check_point_weights_only : bool
+            If True, then only the model's weights will be saved, else the full
+            model is saved. Ignored if check_point = False. (default: True)
 
         Returns
         -------
@@ -618,6 +650,16 @@ class CNN(object):
                 train_labels = self._smooth_labels(train_labels, smooth_factor)
             test_labels = to_categorical(test_labels, self.n_classes)
 
+            # Setup checkpointer
+            checkpointer = None
+            if check_point:
+                filepath = os.path.join(output_dir,
+                                        'best_checkpointed_model.h5')
+                checkpointer = [ModelCheckpoint(filepath,
+                                monitor='val_loss', verbose=0,
+                                save_weights_only=check_point_weights_only,
+                                save_best_only=True, mode='auto')]
+
             # Preprocess images
             datagen = ImageDataGenerator(
                             horizontal_flip=horizontal_flip,
@@ -640,6 +682,7 @@ class CNN(object):
                         steps_per_epoch=train_images.shape[0] // batch_size,
                         epochs=epochs,
                         class_weight=self.class_weights,
+                        callbacks=checkpointer,
                         validation_data=(test_images, test_labels),
                         initial_epoch=initial_epoch)
 
