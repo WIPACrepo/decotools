@@ -500,7 +500,7 @@ class CNN(object):
         """
         # Validate user input
         if not self.training:
-            raise ValueError('CNN class initialized with training=\'False\','
+            raise ValueError('CNN class initialized with training=\'False\', '
                              'must be \'True\'')
 
         train_images, train_labels = _check_shape(train_images, train_labels)
@@ -533,7 +533,6 @@ class CNN(object):
                     check_point_weights_only=check_point_weights_only)
 
         if cv is None:
-            # Save model, weights, history
             self._fit(train_images, train_labels,
                       test_images=test_images, test_labels=test_labels,
                       check_point=check_point,

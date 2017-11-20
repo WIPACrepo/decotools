@@ -2,7 +2,7 @@
 import pytest
 import os
 import numpy as np
-
+from sklearn.model_selection import KFold
 import keras
 from keras.models import Sequential
 from keras.layers import Conv2D, MaxPooling2D, Cropping2D
@@ -77,15 +77,40 @@ def test_CNN_smooth_labels_fails():
     assert error == str(excinfo.value)
 
 
-def test_CNN_fit_passes():
+def test_CNN_fit_training_raises():
+    with pytest.raises(ValueError) as excinfo:
+        cnn.fit(train_images, train_labels,
+                epochs=1, batch_size=n_training)
+    error = 'CNN class initialized with training=\'False\', must be \'True\''
+    assert error == str(excinfo.value)
+
+
+def test_default_CNN_fit_passes():
     default_cnn.fit(train_images, train_labels,
                     test_images=test_images, test_labels=test_labels,
                     epochs=1, batch_size=n_training)
 
 
+def test_CNN_fit_passes():
+    training_cnn.fit(train_images, train_labels,
+                     test_images=test_images, test_labels=test_labels,
+                     epochs=1, batch_size=n_training)
+
+
+def test_CNN_fit_no_validation_passes():
+    training_cnn.fit(train_images, train_labels,
+                     epochs=1, batch_size=n_training)
+
+
 def test_CNN_fit_CV_passes():
     training_cnn.fit(train_images, train_labels,
                      epochs=1, batch_size=1, cv=2)
+
+
+def test_CNN_fit_kfold_passes():
+    kfold = KFold(n_splits=2, shuffle=True, random_state=2)
+    training_cnn.fit(train_images, train_labels,
+                     epochs=1, batch_size=1, cv=kfold)
 
 
 def test_CNN_fit_batchsize_raises():
@@ -165,6 +190,34 @@ def test_CNN_cv_output_files(tmpdir):
             assert os.path.exists(cv_outfile)
             # Check that output file isn't empty
             assert os.path.getsize(cv_outfile) > 0
+
+
+def test_CNN_model_file(tmpdir):
+    model_outfile = str(tmpdir.join('my_model.h5'))
+    training_cnn.fit(train_images, train_labels,
+                     epochs=1, batch_size=1,
+                     save_model=model_outfile)
+    # Get predictions from trained model
+    pred_trained = training_cnn.predict(test_images)
+    # Get predictions from saved model
+    saved_cnn = CNN(model_file=model_outfile)
+    pred_saved = saved_cnn.predict(test_images)
+
+    np.testing.assert_array_equal(pred_trained, pred_saved)
+
+
+def test_CNN_weights_file(tmpdir):
+    weights_outfile = str(tmpdir.join('my_weights.h5'))
+    training_cnn.fit(train_images, train_labels,
+                     epochs=1, batch_size=1,
+                     save_weights=weights_outfile)
+    # Get predictions from trained model
+    pred_trained = training_cnn.predict(test_images)
+    # Get predictions from saved model
+    saved_cnn = CNN(custom_model=model, weights_file=weights_outfile)
+    pred_saved = saved_cnn.predict(test_images)
+
+    np.testing.assert_array_equal(pred_trained, pred_saved)
 
 
 def test_get_brightest_pixel():
