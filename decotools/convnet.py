@@ -127,20 +127,20 @@ class CNN(object):
     ----------
     weights_file : str, optional
         Path and file name of an hdf5 file containing the trained model
-        weights to be used by the CNN. (default: None)
+        weights to be used by the CNN (default is None).
     model_file : str, optional
         Path and file name of an hdf5 file containing a trained model.
         Typically, this should only be used when continuing an existing
-        training session. (default: None)
+        training session (default is None).
     custom_model : keras model, optional
         User-defined, compiled keras model to be used in place of the
-        default (default: None)
+        default (default is None).
     training : bool, optional
         If True, initializes the model structure used for training. If
-        False, initializes the model structure used for predictions.
-        (default: False)
-    n_classes : int
-        Number of classes to be used by the CNN. (default: 4)
+        False, initializes the model structure used for predictions
+        (default is False).
+    n_classes : int, optional
+        Number of classes to be used by the CNN (default is 4).
 
     """
     def __init__(self, weights_file=None, model_file=None, custom_model=None,
@@ -261,7 +261,7 @@ class CNN(object):
         numpy.ndarray
             Array containing smoothed one-hot row-vector labels
         """
-        y = np.asarray(y)
+        y = np.array(y, copy=True)
         assert len(y.shape) == 2
         if 0 <= smooth_factor <= 1:
             y *= 1 - smooth_factor
@@ -278,13 +278,13 @@ class CNN(object):
         ----------
         images : numpy.ndarray
             Array of grayscale, normalized images to be used for evaluation.
-            Input shape = (n_image,n_row,n_cols,1)
+            Input shape = (n_image,n_row,n_cols,1).
         labels : numpy.ndarray
-            Array of labels to be used for evaluation, shape=(n_images,)
-        batch_size : int
-            Batch size to use for predictions (default: 32)
-        verbose : int
-            Verbosity mode to use, 0 or 1 (default: 0)
+            Array of labels to be used for evaluation, shape=(n_images,).
+        batch_size : int, optional
+            Batch size to use for predictions (default is 32).
+        verbose : int, optional
+            Verbosity mode to use, 0 or 1 (default is 0).
 
         Returns
         -------
@@ -302,18 +302,17 @@ class CNN(object):
         print(self.model.summary())
 
     def predict(self, images, batch_size=32, verbose=0):
-        """
-        Predict classifications for an array of images
+        """ Predict classifications for an input image array
 
         Parameters
         ----------
         images : numpy.ndarray
             Array of grayscale, normalized images to be used for class
             predictions. Input shape = (n_image,n_row,n_cols,1)
-        batch_size : int
-            Batch size to use for predictions (default: 32)
-        verbose : int
-            Verbosity mode to use, 0 or 1 (default: 0)
+        batch_size : int, optional
+            Batch size to use for predictions (default is 32).
+        verbose : int, optional
+            Verbosity mode to use, 0 or 1 (default is 0).
 
         Returns
         -------
@@ -420,14 +419,14 @@ class CNN(object):
         ----------
         train_images : numpy.ndarray
             Array of grayscale, normalized images to be used for training the
-            CNN. Input shape = (n_image,n_row,n_cols,1)
+            CNN. Input shape = (n_image,n_row,n_cols,1).
         train_labels : numpy.ndarray
-            Array of training labels, shape=(n_images,)
+            Array of training labels, shape=(n_images,).
         test_images : numpy.ndarray, optional
             Array of grayscale, normalized images to be used for testing the
-            CNN. Input shape = (n_image,n_row,n_cols,1)
+            CNN. Input shape = (n_image,n_row,n_cols,1).
         test_labels : numpy.ndarray, optional
-            Array of testing labels, shape=(n_images,)
+            Array of testing labels, shape=(n_images,).
         cv : int, scikit-learn cross validator, None, optional
             Option for cross-validation fitting. If ``cv`` is an integer
             ``sklearn.model_selection.StratifiedKFold`` will be used with
@@ -435,68 +434,71 @@ class CNN(object):
             ``sklearn.model_selection`` can be passed to ``cv`` as well
             (default is None).
         batch_size : int, optional
-            Number of samples per gradient update (default: 32)
+            Number of samples per gradient update (default is 32).
         seed : int, optional
-            Random seed to be used for reproducibility. (default: None)
+            Random seed to be used for reproducibility. (default is None).
         epochs : int, optional
             Number of epochs to train the model. Note that in conjunction with
             initial_epoch, the parameter epochs is to be understood as
-            "final epoch". (default: 10)
+            "final epoch". (default is 10).
         initial_epoch : int, optional
-            Epoch at which to start training (useful for resuming a previous
-            training run). (default: 0)
-        smooth_factor : float between 0,1, optional
+            Epoch at which to start training. Useful for resuming a previous
+            training run (default is 0).
+        smooth_factor : float in range (0, 1), optional
             Level of smoothing to apply to one-hot label vector. Ex.
             smooth_factor of 0.004 applied to [0, 1, 0, 0], results in
-            [0.001, 0.997, 0.001, 0.001]. (default: None)
+            [0.001, 0.997, 0.001, 0.001] (default is None).
         horizontal_flip : bool, optional
-            Randomly flip inputs horizontally. (default: True)
+            Randomly flip inputs horizontally (default is True).
         vertical_flip : bool, optional
-            Randomly flip inputs vertically. (default: True)
-        width_shift_range : Float (fraction of total width), optional
-            Range for random horizontal shifts. (default: 0.08)
-        height_shift_range : Float (fraction of total height), optional
-            Range for random vertical shifts. (default: 0.08)
+            Randomly flip inputs vertically (default is True).
+        width_shift_range : float, optional
+            Range for random horizontal shifts (default is 0.08).
+        height_shift_range : float, optional
+            Range for random vertical shifts (default is 0.08).
         rotation_range : int, optional
-            Degree range for random rotations (default: 180)
-        zoom_range : float or [lower, upper], optional
-            Range for random zoom. If a float, [lower, upper] = [1-zoom_range,
-            1+zoom_range] (default: [0.9, 1.1])
+            Degree range for random rotations (default is 180).
+        zoom_range : float or (lower, upper), optional
+            Range for random zoom. If a float,
+            ``(lower, upper) = (1-zoom_range, 1+zoom_range)`` (default
+            is ``(0.9, 1.1)``).
         fill_mode : {"constant", "nearest", "reflect" or "wrap"}, optional
             Points outside the boundaries of the input are filled according to
-            the given mode. (default: "constant")
+            the given mode (default is "constant").
         cval : float or int, optional
-            Value used for interpolated pixels when fill_mode = "constant".
-            (default: 0)
+            Value used for interpolated pixels when ``fill_mode="constant"``
+            (default is 0).
         shuffle : bool, optional
             Whether to shuffle the order of the batches at the beginning of
-            each epoch. (default: True)
+            each epoch (default is True).
         save_model : str, optional
             If specified, a copy of the model from the final training epoch
-            will be saved. ex. save_model='my_model.h5'. Typically used for
-            continued training (default: None)
+            will be saved. For example, ``save_model='my_model.h5'``.
+            Typically used for continued training (default is None).
         save_weights : str, optional
             If specified, a copy of the model weights from the final training
-            epoch will be saved. ex. save_weights='my_weights.h5'.
-            (default: None)
+            epoch will be saved. For example, ``save_weights='my_weights.h5'``
+            (default is None).
         save_history : str, optional
             If specified, the training history (accuracy and loss for training
-            and testing) from each epoch will be saved to a '.csv'.
-            ex. save_history='my_history.csv'. (default: None)
+            and testing) from each epoch will be saved to a CSV file.
+            For example, ``save_history='my_history.csv'`` (default is None).
         check_point : str, optional
             If specified, saves a running copy of the model corresponding to
             the lowest validation loss epoch. Each time a new low is reached,
-            the previous best model is over-written by the new one
-            (default is None).
+            the previous best model is over-written by the new one.
+            For example, ``check_point='my_checkpoint.h5'`` (default is None).
         check_point_weights_only : bool, optional
-            If True, then only the model's weights will be saved, else the full
-            model is saved. Ignored if check_point = False. (default: True)
+            If True, only the model's weights will be saved in the check
+            point. Otherwise the full model is saved. Ignored if
+            ``check_point=False`` (default is True).
         verbose : bool, optional
             Option for verbose output.
 
         Returns
         -------
         self : CNN
+            Trained CNN.
         """
         # Validate user input
         if not self.training:

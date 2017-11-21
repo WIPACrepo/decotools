@@ -77,6 +77,14 @@ def test_CNN_smooth_labels_fails():
     assert error == str(excinfo.value)
 
 
+def test_CNN_smooth_labels():
+    smooth_factor = 0
+    y = np.array([[0, 1], [1, 0]], dtype=float)
+    y_smoothed = cnn._smooth_labels(y, smooth_factor=smooth_factor)
+
+    np.testing.assert_array_equal(y, y_smoothed)
+
+
 def test_CNN_fit_training_raises():
     with pytest.raises(ValueError) as excinfo:
         cnn.fit(train_images, train_labels,
@@ -107,10 +115,28 @@ def test_CNN_fit_CV_passes():
                      epochs=1, batch_size=1, cv=2)
 
 
-def test_CNN_fit_kfold_passes():
+def test_CNN_fit_kfold_CV():
     kfold = KFold(n_splits=2, shuffle=True, random_state=2)
     training_cnn.fit(train_images, train_labels,
                      epochs=1, batch_size=1, cv=kfold)
+
+    train_indices, test_indices = [], []
+    for train_index, test_index in kfold.split(train_images):
+        train_indices.append(train_index)
+        test_indices.append(test_index)
+
+    np.testing.assert_array_equal(train_indices, training_cnn.train_indices)
+    np.testing.assert_array_equal(test_indices, training_cnn.test_indices)
+
+
+def test_CNN_fit_CV_raises():
+    with pytest.raises(TypeError) as excinfo:
+        training_cnn.fit(train_images, train_labels,
+                         epochs=1, batch_size=1,
+                         cv='Not a proper cross-validator')
+    error = ('cv must be an integer or an instance of '
+             'sklearn.model_selection.BaseCrossValidator')
+    assert error == str(excinfo.value)
 
 
 def test_CNN_fit_batchsize_raises():
@@ -193,31 +219,49 @@ def test_CNN_cv_output_files(tmpdir):
 
 
 def test_CNN_model_file(tmpdir):
+    # Test that the predictions from a trained model are the same as the
+    # predictions from the corresponding saved model file.
     model_outfile = str(tmpdir.join('my_model.h5'))
     training_cnn.fit(train_images, train_labels,
                      epochs=1, batch_size=1,
                      save_model=model_outfile)
     # Get predictions from trained model
     pred_trained = training_cnn.predict(test_images)
+    eval_trained = training_cnn.evaluate(test_images, test_labels)
     # Get predictions from saved model
     saved_cnn = CNN(model_file=model_outfile)
     pred_saved = saved_cnn.predict(test_images)
+    eval_saved = saved_cnn.evaluate(test_images, test_labels)
 
     np.testing.assert_array_equal(pred_trained, pred_saved)
+    np.testing.assert_array_equal(eval_trained, eval_saved)
 
 
 def test_CNN_weights_file(tmpdir):
+    # Test that the predictions from a trained model are the same as the
+    # predictions from the corresponding saved weights file.
     weights_outfile = str(tmpdir.join('my_weights.h5'))
     training_cnn.fit(train_images, train_labels,
                      epochs=1, batch_size=1,
                      save_weights=weights_outfile)
     # Get predictions from trained model
     pred_trained = training_cnn.predict(test_images)
+    eval_trained = training_cnn.evaluate(test_images, test_labels)
     # Get predictions from saved model
     saved_cnn = CNN(custom_model=model, weights_file=weights_outfile)
     pred_saved = saved_cnn.predict(test_images)
+    eval_saved = saved_cnn.evaluate(test_images, test_labels)
 
     np.testing.assert_array_equal(pred_trained, pred_saved)
+    np.testing.assert_array_equal(eval_trained, eval_saved)
+
+
+def test_CNN_repr():
+    cnn_repr = repr(default_cnn)
+    print('cnn_repr = {}'.format(cnn_repr))
+    expected_repr = ('CNN(weights_file=None, model_file=None, '
+                     'custom_model=None, training=True, n_classes=4)')
+    assert cnn_repr == expected_repr
 
 
 def test_get_brightest_pixel():
