@@ -45,21 +45,25 @@ Installation
 ============
 
 
-The latest version of decotools, can be install directly from GitHub using ``pip``
+The ``decotools`` Python package can be installed directly from GitHub. ``decotools`` is built on `Google's Tensorflow <https://www.tensorflow.org/>`_, which must be installed to use ``decotools``. If ``tensorflow`` is already installed, then ``decotools`` can be installed from GitHub via
 
 .. code-block:: bash
 
     $ pip install git+https://github.com/WIPACrepo/decotools#egg=decotools
 
+Alternatively, if ``tensorflow`` is not installed, then the following commands can be used to install ``tensorflow`` along with ``decotools``.
 
-Decotools uses the Theano backend within the `Keras deep learning library <https://keras.io/>`_. To configure this backend, the ``KERAS_BACKEND`` environment variable should be set to ``theano``. For example,
+For installing the CPU version of ``tensorflow``:
 
 .. code-block:: bash
 
-    export KERAS_BACKEND=theano
+    $ pip install git+https://github.com/WIPACrepo/decotools#egg=decotools[tf]
 
+For installing the GPU version of ``tensorflow``:
 
-For more information on Keras backends see https://keras.io/backend/
+.. code-block:: bash
+
+    $ pip install git+https://github.com/WIPACrepo/decotools#egg=decotools[tf-gpu]
 
 
 Indices and tables
