@@ -26,6 +26,11 @@ VERSION = decotools.__version__
 with open('requirements/default.txt') as fid:
     INSTALL_REQUIRES = [l.strip() for l in fid.readlines() if l]
 
+EXTRAS_REQUIRE = {
+    'tf': ['tensorflow'],
+    'tf-gpu': ['tensorflow-gpu'],
+}
+
 setup(
     name=DISTNAME,
     version=VERSION,
@@ -35,5 +40,6 @@ setup(
     author=MAINTAINER,
     license=LICENSE,
     packages=find_packages(),
-    install_requires=INSTALL_REQUIRES
+    install_requires=INSTALL_REQUIRES,
+    extras_require=EXTRAS_REQUIRE
 )
