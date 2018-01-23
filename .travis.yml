@@ -11,11 +11,8 @@ matrix:
         - python: "3.6-dev"
         - python: "3.7-dev"
         - python: "nightly"
-env:
-  global:
-    - KERAS_BACKEND=theano
 install:
-    - pip install .
+    - pip install .[tf]
     - pip install -r requirements/docs.txt
     - pip install -r requirements/test.txt
 script:

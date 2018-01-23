@@ -1,4 +1,4 @@
-numpy==1.13.0
+numpy
 pandas
 tables
 scikit-image
@@ -6,6 +6,5 @@ Pillow
 matplotlib
 dask[complete]
 keras
-Theano==0.9
 scikit-learn
 h5py
