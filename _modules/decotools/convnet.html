@@ -1,0 +1,857 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>decotools.convnet &mdash; decotools 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="decotools 0.0.1 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> decotools
+          
+
+          
+          </a>
+
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">Decotools API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/WIPACrepo/decotools">decotools &#64; GitHub</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/WIPACrepo/decotools/issues">Issue tracker</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">decotools</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>decotools.convnet</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for decotools.convnet</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="k">import</span> <span class="n">Image</span>
+<span class="kn">import</span> <span class="nn">keras</span>
+<span class="kn">from</span> <span class="nn">keras.models</span> <span class="k">import</span> <span class="n">Sequential</span><span class="p">,</span> <span class="n">load_model</span>
+<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="k">import</span> <span class="p">(</span><span class="n">Conv2D</span><span class="p">,</span> <span class="n">MaxPooling2D</span><span class="p">,</span> <span class="n">Cropping2D</span><span class="p">,</span> <span class="n">Flatten</span><span class="p">,</span>
+                          <span class="n">Dense</span><span class="p">,</span> <span class="n">Dropout</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">keras.layers.advanced_activations</span> <span class="k">import</span> <span class="n">LeakyReLU</span>
+<span class="kn">from</span> <span class="nn">keras.constraints</span> <span class="k">import</span> <span class="n">maxnorm</span>
+<span class="kn">from</span> <span class="nn">keras.utils</span> <span class="k">import</span> <span class="n">to_categorical</span>
+<span class="kn">from</span> <span class="nn">keras.preprocessing.image</span> <span class="k">import</span> <span class="n">ImageDataGenerator</span>
+<span class="kn">from</span> <span class="nn">keras.callbacks</span> <span class="k">import</span> <span class="n">ModelCheckpoint</span>
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="k">import</span> <span class="n">BaseCrossValidator</span><span class="p">,</span> <span class="n">StratifiedKFold</span>
+
+
+<span class="k">def</span> <span class="nf">get_crop_range</span><span class="p">(</span><span class="n">maxX</span><span class="p">,</span> <span class="n">maxY</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">32</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Define region of image to crop</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">maxX</span><span class="o">-</span><span class="n">size</span><span class="p">,</span> <span class="n">maxX</span><span class="o">+</span><span class="n">size</span><span class="p">,</span> <span class="n">maxY</span><span class="o">-</span><span class="n">size</span><span class="p">,</span> <span class="n">maxY</span><span class="o">+</span><span class="n">size</span>
+
+
+<span class="k">def</span> <span class="nf">pass_edge_check</span><span class="p">(</span><span class="n">maxX</span><span class="p">,</span> <span class="n">maxY</span><span class="p">,</span> <span class="n">img_shape</span><span class="p">,</span> <span class="n">crop_size</span><span class="o">=</span><span class="mi">64</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks if image is on the edge of the sensor</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x0</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">y1</span> <span class="o">=</span> <span class="n">get_crop_range</span><span class="p">(</span><span class="n">maxX</span><span class="p">,</span> <span class="n">maxY</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">crop_size</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">checks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x0</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">x1</span> <span class="o">&lt;=</span> <span class="n">img_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                       <span class="n">y0</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">y1</span> <span class="o">&lt;=</span> <span class="n">img_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+    <span class="k">return</span> <span class="n">checks</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">get_brightest_pixel</span><span class="p">(</span><span class="n">img</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get brightest image pixel indices</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+    <span class="n">summed_img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span><span class="n">summed_img</span><span class="o">.</span><span class="n">argmax</span><span class="p">(),</span> <span class="n">summed_img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">convert_images</span><span class="p">(</span><span class="n">images</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert an array of images to the format required by the CNN</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    images : numpy.ndarray</span>
+<span class="sd">        Array (tensor) containing images to be passed to the CNN model. For</span>
+<span class="sd">        predictions, array should have shape:(n_images, 64, 64, 3). For</span>
+<span class="sd">        training, array should have shape:(n_images, 100, 100, 3)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    numpy.ndarray</span>
+<span class="sd">        Array of normalized, grayscale images with</span>
+<span class="sd">        shape:(n_images, n_rows, n_cols, 1)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span>
+    <span class="n">images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">images</span><span class="o">/</span><span class="mf">255.</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">images</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">images</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">images</span>
+
+
+<span class="k">def</span> <span class="nf">process_image_files</span><span class="p">(</span><span class="n">image_files</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">return_edge_filter</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Process image files for use in CNN</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    image_files : array_like</span>
+<span class="sd">        Iterable of image file paths</span>
+<span class="sd">    size : int, optional</span>
+<span class="sd">        Size to zoom in on brightest pixel. Note that the shape of the zoomed</span>
+<span class="sd">        image will be of shape ``2*size``-by-``2*size``. So for a 64-by-64</span>
+<span class="sd">        zoomed image, use ``size=32`` (default is 32).</span>
+<span class="sd">    return_edge_filter : bool, optional</span>
+<span class="sd">        Option to return a boolean array indicating which images passed the</span>
+<span class="sd">        edge filter (default is False).</span>
+<span class="sd">    verbose : bool, optional</span>
+<span class="sd">        Option for verbose output (default is False).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    images : numpy.ndarray</span>
+<span class="sd">        Array of normalized, grayscale images with shape:(n_images, n_rows,</span>
+<span class="sd">        n_cols, 1)</span>
+<span class="sd">    edge_filter : numpy.ndarray</span>
+<span class="sd">        Only returned if ``return_edge_filter`` is True. Boolean array</span>
+<span class="sd">        indicating which image files passed the edge filter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">images</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">edge_filter</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">image_files</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="n">n_edge</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">image_file</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">image_files</span><span class="p">):</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">image_file</span><span class="p">)</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s1">&#39;RGB&#39;</span><span class="p">)</span>
+        <span class="n">maxY</span><span class="p">,</span> <span class="n">maxX</span> <span class="o">=</span> <span class="n">get_brightest_pixel</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pass_edge_check</span><span class="p">(</span><span class="n">maxX</span><span class="p">,</span> <span class="n">maxY</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">crop_size</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="n">size</span><span class="p">):</span>
+            <span class="n">x0</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">y1</span> <span class="o">=</span> <span class="n">get_crop_range</span><span class="p">(</span><span class="n">maxX</span><span class="p">,</span> <span class="n">maxY</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">)</span>
+            <span class="n">cropped_img</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">crop</span><span class="p">((</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">))</span>
+            <span class="n">cropped_img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">cropped_img</span><span class="p">)</span>
+            <span class="n">images</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cropped_img</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">n_edge</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">edge_filter</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="n">edge_str</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;</span><span class="se">\r</span><span class="s1">Number of images that failed the edge &#39;</span>
+                        <span class="s1">&#39;filter: </span><span class="si">{}</span><span class="s1"> of </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_edge</span><span class="p">,</span> <span class="n">idx</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">edge_str</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="n">images</span> <span class="o">=</span> <span class="n">convert_images</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">return_edge_filter</span><span class="p">:</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">images</span><span class="p">,</span> <span class="n">edge_filter</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">images</span>
+
+    <span class="k">return</span> <span class="n">output</span>
+
+
+<div class="viewcode-block" id="CNN"><a class="viewcode-back" href="../../api.html#decotools.convnet.CNN">[docs]</a><span class="k">class</span> <span class="nc">CNN</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;CNN class</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    weights_file : str, optional</span>
+<span class="sd">        Path and file name of an hdf5 file containing the trained model</span>
+<span class="sd">        weights to be used by the CNN (default is None).</span>
+<span class="sd">    model_file : str, optional</span>
+<span class="sd">        Path and file name of an hdf5 file containing a trained model.</span>
+<span class="sd">        Typically, this should only be used when continuing an existing</span>
+<span class="sd">        training session (default is None).</span>
+<span class="sd">    custom_model : keras model, optional</span>
+<span class="sd">        User-defined, compiled keras model to be used in place of the</span>
+<span class="sd">        default (default is None).</span>
+<span class="sd">    training : bool, optional</span>
+<span class="sd">        If True, initializes the model structure used for training. If</span>
+<span class="sd">        False, initializes the model structure used for predictions</span>
+<span class="sd">        (default is False).</span>
+<span class="sd">    n_classes : int, optional</span>
+<span class="sd">        Number of classes to be used by the CNN (default is 4).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">weights_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">model_file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">custom_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">n_classes</span><span class="o">=</span><span class="mi">4</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weights_file</span> <span class="o">=</span> <span class="n">weights_file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_file</span> <span class="o">=</span> <span class="n">model_file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">custom_model</span> <span class="o">=</span> <span class="n">custom_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_classes</span> <span class="o">=</span> <span class="n">n_classes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">training</span> <span class="o">=</span> <span class="n">training</span>
+        <span class="k">if</span> <span class="n">custom_model</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">custom_model</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_build_model</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">weights_file</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_load_weights</span><span class="p">(</span><span class="n">weights_file</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">model_file</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_load_model</span><span class="p">(</span><span class="n">model_file</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">attributes</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;weights_file&#39;</span><span class="p">,</span> <span class="s1">&#39;model_file&#39;</span><span class="p">,</span> <span class="s1">&#39;custom_model&#39;</span><span class="p">,</span>
+                      <span class="s1">&#39;training&#39;</span><span class="p">,</span> <span class="s1">&#39;n_classes&#39;</span><span class="p">]</span>
+        <span class="n">attr_str</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">=</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">att</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">att</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+                    <span class="k">for</span> <span class="n">att</span> <span class="ow">in</span> <span class="n">attributes</span><span class="p">]</span>
+        <span class="n">rep</span> <span class="o">=</span> <span class="s1">&#39;CNN(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">attr_str</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">rep</span>
+
+    <span class="k">def</span> <span class="nf">_build_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Define CNN model structure</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">Sequential</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Cropping2D</span><span class="p">(</span><span class="n">cropping</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span> <span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dropout</span><span class="p">(</span><span class="mf">0.2</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Conv2D</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Conv2D</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span>
+                           <span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">LeakyReLU</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Conv2D</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">LeakyReLU</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">MaxPooling2D</span><span class="p">(</span><span class="n">pool_size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dropout</span><span class="p">(</span><span class="mf">0.2</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Conv2D</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">LeakyReLU</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Conv2D</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">LeakyReLU</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">MaxPooling2D</span><span class="p">(</span><span class="n">pool_size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dropout</span><span class="p">(</span><span class="mf">0.2</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Conv2D</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">LeakyReLU</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Conv2D</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">LeakyReLU</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">MaxPooling2D</span><span class="p">(</span><span class="n">pool_size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dropout</span><span class="p">(</span><span class="mf">0.2</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Conv2D</span><span class="p">(</span><span class="mi">512</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">LeakyReLU</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Conv2D</span><span class="p">(</span><span class="mi">512</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">LeakyReLU</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">MaxPooling2D</span><span class="p">(</span><span class="n">pool_size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dropout</span><span class="p">(</span><span class="mf">0.2</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Flatten</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">2048</span><span class="p">,</span> <span class="n">kernel_constraint</span><span class="o">=</span><span class="n">maxnorm</span><span class="p">(</span><span class="mi">3</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">LeakyReLU</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dropout</span><span class="p">(</span><span class="mf">0.4</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">2048</span><span class="p">,</span> <span class="n">kernel_constraint</span><span class="o">=</span><span class="n">maxnorm</span><span class="p">(</span><span class="mi">3</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">LeakyReLU</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dropout</span><span class="p">(</span><span class="mf">0.4</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_classes</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;softmax&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">loss</span><span class="o">=</span><span class="n">keras</span><span class="o">.</span><span class="n">losses</span><span class="o">.</span><span class="n">categorical_crossentropy</span><span class="p">,</span>
+                           <span class="n">optimizer</span><span class="o">=</span><span class="n">keras</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">Adadelta</span><span class="p">(),</span>
+                           <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;accuracy&#39;</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_calculate_class_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; calculate class weights to be used for training</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">classes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_classes</span><span class="p">)</span>
+        <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">classes</span><span class="p">:</span>
+            <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">labels</span> <span class="o">==</span> <span class="n">i</span><span class="p">))</span>
+        <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span><span class="o">/</span><span class="n">counts</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">class_weights</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">classes</span><span class="p">,</span> <span class="n">counts</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_load_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Load an existing model structure and weights</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">load_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;No model file found for </span><span class="si">{}</span><span class="s1">...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">model</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_load_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">weights</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Load trained model weights; assumes default model structure</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">weights</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">load_weights</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;No weights file found for </span><span class="si">{}</span><span class="s1">...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">weights</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_smooth_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">smooth_factor</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert a matrix of one-hot row-vector labels into smoothed versions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        y : numpy.ndarray</span>
+<span class="sd">            Array of one-hot row-vector labels</span>
+<span class="sd">        smooth_factor : float</span>
+<span class="sd">            value between 0-1 to be used for label smoothing</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            Array containing smoothed one-hot row-vector labels</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+        <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">smooth_factor</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">y</span> <span class="o">*=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">smooth_factor</span>
+            <span class="n">y</span> <span class="o">+=</span> <span class="n">smooth_factor</span> <span class="o">/</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s1">&#39;Invalid label smoothing factor: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">smooth_factor</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">y</span>
+
+<div class="viewcode-block" id="CNN.evaluate"><a class="viewcode-back" href="../../api.html#decotools.convnet.CNN.evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Evaluate accuracy and loss of model predictions</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        images : numpy.ndarray</span>
+<span class="sd">            Array of grayscale, normalized images to be used for evaluation.</span>
+<span class="sd">            Input shape = (n_image,n_row,n_cols,1).</span>
+<span class="sd">        labels : numpy.ndarray</span>
+<span class="sd">            Array of labels to be used for evaluation, shape=(n_images,).</span>
+<span class="sd">        batch_size : int, optional</span>
+<span class="sd">            Batch size to use for predictions (default is 32).</span>
+<span class="sd">        verbose : int, optional</span>
+<span class="sd">            Verbosity mode to use, 0 or 1 (default is 0).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            list containing [test_loss, test_accuracy]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">to_categorical</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_classes</span><span class="p">)</span>
+        <span class="n">score</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span>
+                                    <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">score</span></div>
+
+<div class="viewcode-block" id="CNN.model_summary"><a class="viewcode-back" href="../../api.html#decotools.convnet.CNN.model_summary">[docs]</a>    <span class="k">def</span> <span class="nf">model_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Print summary of currently loaded model</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="CNN.predict"><a class="viewcode-back" href="../../api.html#decotools.convnet.CNN.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Predict classifications for an input image array</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        images : numpy.ndarray</span>
+<span class="sd">            Array of grayscale, normalized images to be used for class</span>
+<span class="sd">            predictions. Input shape = (n_image,n_row,n_cols,1)</span>
+<span class="sd">        batch_size : int, optional</span>
+<span class="sd">            Batch size to use for predictions (default is 32).</span>
+<span class="sd">        verbose : int, optional</span>
+<span class="sd">            Verbosity mode to use, 0 or 1 (default is 0).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            Array containing class probabilities for each image. The array</span>
+<span class="sd">            output is ordered as follows: [n_images, p(worm), p(spot),</span>
+<span class="sd">            p(track), p(noise)]</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+                                  <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_images</span><span class="p">,</span> <span class="n">train_labels</span><span class="p">,</span> <span class="n">test_images</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+             <span class="n">test_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">800</span><span class="p">,</span>
+             <span class="n">initial_epoch</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">smooth_factor</span><span class="o">=</span><span class="mf">0.004</span><span class="p">,</span> <span class="n">horizontal_flip</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+             <span class="n">vertical_flip</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">width_shift_range</span><span class="o">=</span><span class="mf">0.08</span><span class="p">,</span>
+             <span class="n">height_shift_range</span><span class="o">=</span><span class="mf">0.08</span><span class="p">,</span> <span class="n">rotation_range</span><span class="o">=</span><span class="mf">180.</span><span class="p">,</span>
+             <span class="n">zoom_range</span><span class="o">=</span><span class="p">(</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">1.1</span><span class="p">),</span> <span class="n">fill_mode</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span> <span class="n">cval</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+             <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">save_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">save_weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+             <span class="n">save_history</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">check_point</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+             <span class="n">check_point_weights_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+        <span class="c1"># Convert labels to one-hot and apply smoothing</span>
+        <span class="n">train_labels</span> <span class="o">=</span> <span class="n">to_categorical</span><span class="p">(</span><span class="n">train_labels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_classes</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">smooth_factor</span><span class="p">:</span>
+            <span class="n">train_labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_smooth_labels</span><span class="p">(</span><span class="n">train_labels</span><span class="p">,</span> <span class="n">smooth_factor</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">test_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">test_labels</span> <span class="o">=</span> <span class="n">to_categorical</span><span class="p">(</span><span class="n">test_labels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_classes</span><span class="p">)</span>
+            <span class="n">validation_data</span> <span class="o">=</span> <span class="p">(</span><span class="n">test_images</span><span class="p">,</span> <span class="n">test_labels</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">validation_data</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Setup checkpointer</span>
+        <span class="k">if</span> <span class="n">check_point</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">checkpointer</span> <span class="o">=</span> <span class="p">[</span><span class="n">ModelCheckpoint</span><span class="p">(</span><span class="n">check_point</span><span class="p">,</span>
+                            <span class="n">monitor</span><span class="o">=</span><span class="s1">&#39;val_loss&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                            <span class="n">save_weights_only</span><span class="o">=</span><span class="n">check_point_weights_only</span><span class="p">,</span>
+                            <span class="n">save_best_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">checkpointer</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Preprocess images</span>
+        <span class="n">datagen</span> <span class="o">=</span> <span class="n">ImageDataGenerator</span><span class="p">(</span>
+                        <span class="n">horizontal_flip</span><span class="o">=</span><span class="n">horizontal_flip</span><span class="p">,</span>
+                        <span class="n">vertical_flip</span><span class="o">=</span><span class="n">vertical_flip</span><span class="p">,</span>
+                        <span class="n">width_shift_range</span><span class="o">=</span><span class="n">width_shift_range</span><span class="p">,</span>
+                        <span class="n">height_shift_range</span><span class="o">=</span><span class="n">height_shift_range</span><span class="p">,</span>
+                        <span class="n">rotation_range</span><span class="o">=</span><span class="n">rotation_range</span><span class="p">,</span>
+                        <span class="n">zoom_range</span><span class="o">=</span><span class="n">zoom_range</span><span class="p">,</span>
+                        <span class="n">fill_mode</span><span class="o">=</span><span class="n">fill_mode</span><span class="p">,</span>
+                        <span class="n">cval</span><span class="o">=</span><span class="n">cval</span><span class="p">)</span>
+
+        <span class="c1"># Fit the model</span>
+        <span class="n">datagen</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_images</span><span class="p">)</span>
+        <span class="n">steps_per_epoch</span> <span class="o">=</span> <span class="n">train_images</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="n">batch_size</span>
+        <span class="n">hist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fit_generator</span><span class="p">(</span><span class="n">datagen</span><span class="o">.</span><span class="n">flow</span><span class="p">(</span><span class="n">train_images</span><span class="p">,</span>
+                                                     <span class="n">train_labels</span><span class="p">,</span>
+                                                     <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+                                                     <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+                                                     <span class="n">shuffle</span><span class="o">=</span><span class="n">shuffle</span><span class="p">),</span>
+                                        <span class="n">steps_per_epoch</span><span class="o">=</span><span class="n">steps_per_epoch</span><span class="p">,</span>
+                                        <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span>
+                                        <span class="n">class_weight</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">class_weights</span><span class="p">,</span>
+                                        <span class="n">callbacks</span><span class="o">=</span><span class="n">checkpointer</span><span class="p">,</span>
+                                        <span class="n">validation_data</span><span class="o">=</span><span class="n">validation_data</span><span class="p">,</span>
+                                        <span class="n">initial_epoch</span><span class="o">=</span><span class="n">initial_epoch</span><span class="p">)</span>
+
+        <span class="c1"># Evaluate  model</span>
+        <span class="k">if</span> <span class="n">validation_data</span><span class="p">:</span>
+            <span class="n">score</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">test_images</span><span class="p">,</span> <span class="n">test_labels</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Final test loss:&#39;</span><span class="p">,</span> <span class="n">score</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Final test accuracy:&#39;</span><span class="p">,</span> <span class="n">score</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="c1"># Save model, weights, history</span>
+        <span class="k">if</span> <span class="n">save_model</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">save_model</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">save_weights</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">save_weights</span><span class="p">(</span><span class="n">save_weights</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">save_history</span><span class="p">:</span>
+            <span class="n">hist_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">hist</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="s1">&#39;acc&#39;</span><span class="p">],</span>
+                                  <span class="n">hist</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="s1">&#39;val_acc&#39;</span><span class="p">],</span>
+                                  <span class="n">hist</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">],</span>
+                                  <span class="n">hist</span><span class="o">.</span><span class="n">history</span><span class="p">[</span><span class="s1">&#39;val_loss&#39;</span><span class="p">]])</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">save_history</span><span class="p">,</span>
+                       <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">hist_vals</span><span class="p">),</span>
+                       <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">,</span>
+                       <span class="n">header</span><span class="o">=</span><span class="s1">&#39;acc,val_acc,loss,val_loss&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span>
+
+<div class="viewcode-block" id="CNN.fit"><a class="viewcode-back" href="../../api.html#decotools.convnet.CNN.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_images</span><span class="p">,</span> <span class="n">train_labels</span><span class="p">,</span> <span class="n">test_images</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">test_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">800</span><span class="p">,</span>
+            <span class="n">initial_epoch</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">smooth_factor</span><span class="o">=</span><span class="mf">0.004</span><span class="p">,</span> <span class="n">horizontal_flip</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">vertical_flip</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">width_shift_range</span><span class="o">=</span><span class="mf">0.08</span><span class="p">,</span>
+            <span class="n">height_shift_range</span><span class="o">=</span><span class="mf">0.08</span><span class="p">,</span> <span class="n">rotation_range</span><span class="o">=</span><span class="mf">180.</span><span class="p">,</span>
+            <span class="n">zoom_range</span><span class="o">=</span><span class="p">(</span><span class="mf">0.9</span><span class="p">,</span> <span class="mf">1.1</span><span class="p">),</span> <span class="n">fill_mode</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span> <span class="n">cval</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">save_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">save_weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">save_history</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">check_point</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">check_point_weights_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Fit CNN</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        train_images : numpy.ndarray</span>
+<span class="sd">            Array of grayscale, normalized images to be used for training the</span>
+<span class="sd">            CNN. Input shape = (n_image,n_row,n_cols,1).</span>
+<span class="sd">        train_labels : numpy.ndarray</span>
+<span class="sd">            Array of training labels, shape=(n_images,).</span>
+<span class="sd">        test_images : numpy.ndarray, optional</span>
+<span class="sd">            Array of grayscale, normalized images to be used for testing the</span>
+<span class="sd">            CNN. Input shape = (n_image,n_row,n_cols,1).</span>
+<span class="sd">        test_labels : numpy.ndarray, optional</span>
+<span class="sd">            Array of testing labels, shape=(n_images,).</span>
+<span class="sd">        cv : int, scikit-learn cross validator, None, optional</span>
+<span class="sd">            Option for cross-validation fitting. If ``cv`` is an integer</span>
+<span class="sd">            ``sklearn.model_selection.StratifiedKFold`` will be used with</span>
+<span class="sd">            ``cv`` number of folds. Other cross validators from</span>
+<span class="sd">            ``sklearn.model_selection`` can be passed to ``cv`` as well</span>
+<span class="sd">            (default is None).</span>
+<span class="sd">        batch_size : int, optional</span>
+<span class="sd">            Number of samples per gradient update (default is 64).</span>
+<span class="sd">        seed : int, optional</span>
+<span class="sd">            Random seed to be used for reproducibility. (default is None).</span>
+<span class="sd">        epochs : int, optional</span>
+<span class="sd">            Number of epochs to train the model. Note that in conjunction with</span>
+<span class="sd">            initial_epoch, the parameter epochs is to be understood as</span>
+<span class="sd">            &quot;final epoch&quot;. (default is 800).</span>
+<span class="sd">        initial_epoch : int, optional</span>
+<span class="sd">            Epoch at which to start training. Useful for resuming a previous</span>
+<span class="sd">            training run (default is 0).</span>
+<span class="sd">        smooth_factor : float in range (0, 1), optional</span>
+<span class="sd">            Level of smoothing to apply to one-hot label vector. Ex.</span>
+<span class="sd">            smooth_factor of 0.004 applied to [0, 1, 0, 0], results in</span>
+<span class="sd">            [0.001, 0.997, 0.001, 0.001] (default is 0.004).</span>
+<span class="sd">        horizontal_flip : bool, optional</span>
+<span class="sd">            Randomly flip inputs horizontally (default is True).</span>
+<span class="sd">        vertical_flip : bool, optional</span>
+<span class="sd">            Randomly flip inputs vertically (default is True).</span>
+<span class="sd">        width_shift_range : float, optional</span>
+<span class="sd">            Range for random horizontal shifts (default is 0.08).</span>
+<span class="sd">        height_shift_range : float, optional</span>
+<span class="sd">            Range for random vertical shifts (default is 0.08).</span>
+<span class="sd">        rotation_range : int, optional</span>
+<span class="sd">            Degree range for random rotations (default is 180).</span>
+<span class="sd">        zoom_range : float or (lower, upper), optional</span>
+<span class="sd">            Range for random zoom. If a float,</span>
+<span class="sd">            ``(lower, upper) = (1-zoom_range, 1+zoom_range)`` (default</span>
+<span class="sd">            is ``(0.9, 1.1)``).</span>
+<span class="sd">        fill_mode : {&quot;constant&quot;, &quot;nearest&quot;, &quot;reflect&quot; or &quot;wrap&quot;}, optional</span>
+<span class="sd">            Points outside the boundaries of the input are filled according to</span>
+<span class="sd">            the given mode (default is &quot;constant&quot;).</span>
+<span class="sd">        cval : float or int, optional</span>
+<span class="sd">            Value used for interpolated pixels when ``fill_mode=&quot;constant&quot;``</span>
+<span class="sd">            (default is 0).</span>
+<span class="sd">        shuffle : bool, optional</span>
+<span class="sd">            Whether to shuffle the order of the batches at the beginning of</span>
+<span class="sd">            each epoch (default is True).</span>
+<span class="sd">        save_model : str, optional</span>
+<span class="sd">            If specified, a copy of the model from the final training epoch</span>
+<span class="sd">            will be saved. For example, ``save_model=&#39;my_model.h5&#39;``.</span>
+<span class="sd">            Typically used for continued training (default is None).</span>
+<span class="sd">        save_weights : str, optional</span>
+<span class="sd">            If specified, a copy of the model weights from the final training</span>
+<span class="sd">            epoch will be saved. For example, ``save_weights=&#39;my_weights.h5&#39;``</span>
+<span class="sd">            (default is None).</span>
+<span class="sd">        save_history : str, optional</span>
+<span class="sd">            If specified, the training history (accuracy and loss for training</span>
+<span class="sd">            and testing) from each epoch will be saved to a CSV file.</span>
+<span class="sd">            For example, ``save_history=&#39;my_history.csv&#39;`` (default is None).</span>
+<span class="sd">        check_point : str, optional</span>
+<span class="sd">            If specified, saves a running copy of the model corresponding to</span>
+<span class="sd">            the lowest validation loss epoch. Each time a new low is reached,</span>
+<span class="sd">            the previous best model is over-written by the new one.</span>
+<span class="sd">            For example, ``check_point=&#39;my_checkpoint.h5&#39;`` (default is None).</span>
+<span class="sd">        check_point_weights_only : bool, optional</span>
+<span class="sd">            If True, only the model&#39;s weights will be saved in the check</span>
+<span class="sd">            point. Otherwise the full model is saved. Ignored if</span>
+<span class="sd">            ``check_point=False`` (default is True).</span>
+<span class="sd">        verbose : bool, optional</span>
+<span class="sd">            Option for verbose output.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self : CNN</span>
+<span class="sd">            Trained CNN.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Validate user input</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;CNN class initialized with training=</span><span class="se">\&#39;</span><span class="s1">False</span><span class="se">\&#39;</span><span class="s1">, &#39;</span>
+                             <span class="s1">&#39;must be </span><span class="se">\&#39;</span><span class="s1">True</span><span class="se">\&#39;</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="n">train_images</span><span class="p">,</span> <span class="n">train_labels</span> <span class="o">=</span> <span class="n">_check_shape</span><span class="p">(</span><span class="n">train_images</span><span class="p">,</span> <span class="n">train_labels</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">test_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">test_images</span><span class="p">,</span> <span class="n">test_labels</span> <span class="o">=</span> <span class="n">_check_shape</span><span class="p">(</span><span class="n">test_images</span><span class="p">,</span> <span class="n">test_labels</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">batch_size</span> <span class="o">&gt;</span> <span class="n">train_images</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s1">&#39;batch_size must be &lt;= the number of training images&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">cv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">test_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Cross-validation fitting and an explicitly &#39;</span>
+                             <span class="s1">&#39;given testing set can</span><span class="se">\&#39;</span><span class="s1">t be used at the &#39;</span>
+                             <span class="s1">&#39;same time&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">seed</span><span class="p">:</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+
+        <span class="c1"># Calculate class weights</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_class_weights</span><span class="p">(</span><span class="n">train_labels</span><span class="p">)</span>
+
+        <span class="n">args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="n">epochs</span><span class="p">,</span>
+                    <span class="n">initial_epoch</span><span class="o">=</span><span class="n">initial_epoch</span><span class="p">,</span> <span class="n">smooth_factor</span><span class="o">=</span><span class="n">smooth_factor</span><span class="p">,</span>
+                    <span class="n">horizontal_flip</span><span class="o">=</span><span class="n">horizontal_flip</span><span class="p">,</span>
+                    <span class="n">vertical_flip</span><span class="o">=</span><span class="n">vertical_flip</span><span class="p">,</span>
+                    <span class="n">width_shift_range</span><span class="o">=</span><span class="n">width_shift_range</span><span class="p">,</span>
+                    <span class="n">height_shift_range</span><span class="o">=</span><span class="n">height_shift_range</span><span class="p">,</span>
+                    <span class="n">rotation_range</span><span class="o">=</span><span class="n">rotation_range</span><span class="p">,</span> <span class="n">zoom_range</span><span class="o">=</span><span class="n">zoom_range</span><span class="p">,</span>
+                    <span class="n">fill_mode</span><span class="o">=</span><span class="n">fill_mode</span><span class="p">,</span> <span class="n">cval</span><span class="o">=</span><span class="n">cval</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="n">shuffle</span><span class="p">,</span>
+                    <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+                    <span class="n">check_point_weights_only</span><span class="o">=</span><span class="n">check_point_weights_only</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">cv</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fit</span><span class="p">(</span><span class="n">train_images</span><span class="p">,</span> <span class="n">train_labels</span><span class="p">,</span>
+                      <span class="n">test_images</span><span class="o">=</span><span class="n">test_images</span><span class="p">,</span> <span class="n">test_labels</span><span class="o">=</span><span class="n">test_labels</span><span class="p">,</span>
+                      <span class="n">check_point</span><span class="o">=</span><span class="n">check_point</span><span class="p">,</span>
+                      <span class="n">save_model</span><span class="o">=</span><span class="n">save_model</span><span class="p">,</span>
+                      <span class="n">save_weights</span><span class="o">=</span><span class="n">save_weights</span><span class="p">,</span>
+                      <span class="n">save_history</span><span class="o">=</span><span class="n">save_history</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Split into testing and training sets</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cv</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="n">skf</span> <span class="o">=</span> <span class="n">StratifiedKFold</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="n">cv</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="n">shuffle</span><span class="p">,</span>
+                                      <span class="n">random_state</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+                <span class="n">splitter</span> <span class="o">=</span> <span class="n">skf</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">train_images</span><span class="p">,</span> <span class="n">train_labels</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cv</span><span class="p">,</span> <span class="n">BaseCrossValidator</span><span class="p">):</span>
+                <span class="n">splitter</span> <span class="o">=</span> <span class="n">cv</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">train_images</span><span class="p">,</span> <span class="n">train_labels</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;cv must be an integer or an instance of &#39;</span>
+                                <span class="s1">&#39;sklearn.model_selection.BaseCrossValidator&#39;</span><span class="p">)</span>
+
+            <span class="c1"># Store initial weights</span>
+            <span class="n">init_weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">get_weights</span><span class="p">()</span>
+
+            <span class="n">train_indices</span><span class="p">,</span> <span class="n">test_indices</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">fold_idx</span><span class="p">,</span> <span class="p">(</span><span class="n">train_index</span><span class="p">,</span> <span class="n">test_index</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">splitter</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Training fold number </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fold_idx</span><span class="p">))</span>
+                <span class="c1"># Get testing and training split for this fold</span>
+                <span class="n">train_images_fold</span> <span class="o">=</span> <span class="n">train_images</span><span class="p">[</span><span class="n">train_index</span><span class="p">]</span>
+                <span class="n">test_images_fold</span> <span class="o">=</span> <span class="n">train_images</span><span class="p">[</span><span class="n">test_index</span><span class="p">]</span>
+                <span class="n">train_labels_fold</span> <span class="o">=</span> <span class="n">train_labels</span><span class="p">[</span><span class="n">train_index</span><span class="p">]</span>
+                <span class="n">test_labels_fold</span> <span class="o">=</span> <span class="n">train_labels</span><span class="p">[</span><span class="n">test_index</span><span class="p">]</span>
+
+                <span class="n">train_indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">train_index</span><span class="p">)</span>
+                <span class="n">test_indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">test_index</span><span class="p">)</span>
+
+                <span class="c1"># Setup model, weights, and history output files</span>
+                <span class="n">check_outfile</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="n">model_outfile</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="n">weights_outfile</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="n">history_outfile</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">if</span> <span class="n">save_model</span><span class="p">:</span>
+                    <span class="n">model_outfile</span> <span class="o">=</span> <span class="n">_get_cv_outfile</span><span class="p">(</span><span class="n">save_model</span><span class="p">,</span> <span class="n">fold_idx</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">save_weights</span><span class="p">:</span>
+                    <span class="n">weights_outfile</span> <span class="o">=</span> <span class="n">_get_cv_outfile</span><span class="p">(</span><span class="n">save_weights</span><span class="p">,</span> <span class="n">fold_idx</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">save_history</span><span class="p">:</span>
+                    <span class="n">history_outfile</span> <span class="o">=</span> <span class="n">_get_cv_outfile</span><span class="p">(</span><span class="n">save_history</span><span class="p">,</span> <span class="n">fold_idx</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">check_point</span><span class="p">:</span>
+                    <span class="n">check_outfile</span> <span class="o">=</span> <span class="n">_get_cv_outfile</span><span class="p">(</span><span class="n">check_point</span><span class="p">,</span> <span class="n">fold_idx</span><span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">set_weights</span><span class="p">(</span><span class="n">init_weights</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_fit</span><span class="p">(</span><span class="n">train_images_fold</span><span class="p">,</span> <span class="n">train_labels_fold</span><span class="p">,</span>
+                          <span class="n">test_images</span><span class="o">=</span><span class="n">test_images_fold</span><span class="p">,</span>
+                          <span class="n">test_labels</span><span class="o">=</span><span class="n">test_labels_fold</span><span class="p">,</span>
+                          <span class="n">check_point</span><span class="o">=</span><span class="n">check_outfile</span><span class="p">,</span>
+                          <span class="n">save_model</span><span class="o">=</span><span class="n">model_outfile</span><span class="p">,</span>
+                          <span class="n">save_weights</span><span class="o">=</span><span class="n">weights_outfile</span><span class="p">,</span>
+                          <span class="n">save_history</span><span class="o">=</span><span class="n">history_outfile</span><span class="p">,</span>
+                          <span class="o">**</span><span class="n">args</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">train_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">train_indices</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">test_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">test_indices</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">_get_cv_outfile</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">fold_idx</span><span class="p">):</span>
+    <span class="n">head</span><span class="p">,</span> <span class="n">tail</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+    <span class="n">root</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">tail</span><span class="p">)</span>
+    <span class="n">file_path_fold</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">head</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">_</span><span class="si">{}{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">fold_idx</span><span class="p">,</span> <span class="n">ext</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">file_path_fold</span>
+
+
+<span class="k">def</span> <span class="nf">_check_shape</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks that x and y are have consistent shapes.</span>
+
+<span class="sd">    Casts x and y to numpy.ndarrays, using numpy.asarray, and checks that</span>
+<span class="sd">    x and y have the same number of samples (i.e. x.shape[0] == y.shape[0])</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : array_like</span>
+<span class="sd">        First input array.</span>
+<span class="sd">    y : array_like</span>
+<span class="sd">        Second input array.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    x : numpy.ndarray</span>
+<span class="sd">        Numpy array version of x.</span>
+<span class="sd">    y : numpy.ndarray</span>
+<span class="sd">        Numpy array version of y.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Input arrays have shape mismatch&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Deco team.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

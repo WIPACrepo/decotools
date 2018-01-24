@@ -1,0 +1,803 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Decotools API &mdash; decotools 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="decotools 0.0.1 documentation" href="index.html"/>
+        <link rel="next" title="Contributing" href="contributing.html"/>
+        <link rel="prev" title="Decotools" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> decotools
+          
+
+          
+          </a>
+
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Decotools API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#file-i-o">File I/O</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#blob-extraction">Blob Extraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#metrics">Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#event-classification">Event classification</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/WIPACrepo/decotools">decotools &#64; GitHub</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/WIPACrepo/decotools/issues">Issue tracker</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">decotools</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Decotools API</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            
+              <!-- User defined GitHub URL -->
+              <a href="https://github.com/WIPACrepo/decotools" class="fa fa-github"> Edit on GitHub</a>
+            
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="decotools-api">
+<h1>Decotools API<a class="headerlink" href="#decotools-api" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="file-i-o">
+<h2>File I/O<a class="headerlink" href="#file-i-o" title="Permalink to this headline">¶</a></h2>
+<p>There are two functions used to retrieve DECO data: <code class="docutils literal"><span class="pre">get_iOS_files</span></code> and <code class="docutils literal"><span class="pre">get_android_files</span></code>.</p>
+<dl class="function">
+<dt id="decotools.fileio_iOS.get_iOS_files">
+<code class="descclassname">decotools.fileio_iOS.</code><code class="descname">get_iOS_files</code><span class="sig-paren">(</span><em>start_date=None</em>, <em>end_date=None</em>, <em>data_dir='/net/deco/iOSdata'</em>, <em>include_events=True</em>, <em>include_min_bias=False</em>, <em>phone_model=None</em>, <em>device_id=None</em>, <em>return_metadata=False</em>, <em>n_jobs=1</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/decotools/fileio_iOS.html#get_iOS_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#decotools.fileio_iOS.get_iOS_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to retrieve deco iOS image files</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>start_date</strong> : str, optional</p>
+<blockquote>
+<div><p>Starting date for the iOS files to retrieve. Use any common
+date format (e.g. ‘2017-01-01’, ‘20170101’, ‘Jan 1, 2017’, etc).
+Default starting date is ‘2016.01.01’.</p>
+</div></blockquote>
+<p><strong>end_date</strong> : str, optional</p>
+<blockquote>
+<div><p>Ending date for the iOS files to retrieve. Use any common
+date format (e.g. ‘2017-01-01’, ‘20170101’, ‘Jan 1, 2017’, etc).
+Default is the current date.</p>
+</div></blockquote>
+<p><strong>data_dir</strong> : str, optional</p>
+<blockquote>
+<div><p>Base directory to search for iOS image files.</p>
+</div></blockquote>
+<p><strong>include_events</strong> : bool, optional</p>
+<blockquote>
+<div><p>Option to include images files flagged as events. Default is True.</p>
+</div></blockquote>
+<p><strong>include_min_bias</strong> : bool, optional</p>
+<blockquote>
+<div><p>Option to include minimum bias image files. Default is False.</p>
+</div></blockquote>
+<p><strong>phone_model</strong> : str or array-like, optional</p>
+<blockquote>
+<div><p>Option to specify which phone models you would like to look at.
+Can be either a string, e.g. ‘iPhone 7’, or a list of models,
+e.g. [‘iPhone 5’, ‘iPhone 5s’]. Default is to include all
+phone models.</p>
+</div></blockquote>
+<p><strong>device_id</strong> : str or array-like, optional</p>
+<blockquote>
+<div><p>Option to specify which devices you want to look at. Can
+either be a string, e.g. ‘EFD5764E-7209-4579-B0A8-EAF80C950147’, or
+a list of device IDs, e.g. [‘EFD5764E-7209-4579-B0A8-EAF80C950147’,
+‘F216114B-8710-4790-A05D-D645C9C79C27’]. Default is to include all
+device IDs.</p>
+</div></blockquote>
+<p><strong>return_metadata</strong> : boolean, optional</p>
+<blockquote>
+<div><p>Return a DataFrame with metadata information for each image file
+(default is False).</p>
+</div></blockquote>
+<p><strong>n_jobs</strong> : int, optional</p>
+<blockquote>
+<div><p>The number of jobs to run in parallel (default is 1).</p>
+</div></blockquote>
+<p><strong>verbose</strong> : int {0, 1, or 2}</p>
+<blockquote>
+<div><p>Option to have verbose output when getting files. Where 0 is
+least verbose, while 2 is the most verbose.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">numpy.ndarray</p>
+<blockquote class="last">
+<div><p>Numpy array containing files that match specified criteria</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="decotools.fileio_android.get_android_files">
+<code class="descclassname">decotools.fileio_android.</code><code class="descname">get_android_files</code><span class="sig-paren">(</span><em>start_date=None</em>, <em>end_date=None</em>, <em>data_dir='/net/deco/deco_data'</em>, <em>db_file='/net/deco/db_hourly_safe.csv'</em>, <em>include_events=True</em>, <em>include_min_bias=False</em>, <em>device_id=None</em>, <em>return_metadata=False</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/decotools/fileio_android.html#get_android_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#decotools.fileio_android.get_android_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to retrieve deco android image files</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>start_date</strong> : str, optional</p>
+<blockquote>
+<div><p>Starting date for the files to retrieve. Use any common
+date format (e.g. ‘2017-01-01’, ‘20170101’, ‘Jan 1, 2017’, etc).
+Default starting date is ‘2010.01.01’.</p>
+</div></blockquote>
+<p><strong>end_date</strong> : str, optional</p>
+<blockquote>
+<div><p>Ending date for the files to retrieve. Use any common
+date format (e.g. ‘2017-01-01’, ‘20170101’, ‘Jan 1, 2017’, etc).
+Default is the current date.</p>
+</div></blockquote>
+<p><strong>data_dir</strong> : str, optional</p>
+<blockquote>
+<div><p>Base directory to retrieve android image files.</p>
+</div></blockquote>
+<p><strong>db_file</strong> : str, optional</p>
+<blockquote>
+<div><p>File path to android database.</p>
+</div></blockquote>
+<p><strong>include_events</strong> : bool, optional</p>
+<blockquote>
+<div><p>Option to include images files flagged as events. Default is True.</p>
+</div></blockquote>
+<p><strong>include_min_bias</strong> : bool, optional</p>
+<blockquote>
+<div><p>Option to include minimum bias image files. Default is False.</p>
+</div></blockquote>
+<p><strong>device_id</strong> : str or array-like, optional</p>
+<blockquote>
+<div><p>Option to specify which devices you want to look at. Can
+either be a string, e.g. ‘DECO-00000000-450a-7561-433f-0516209b4922’,
+or a list of device IDs, e.g.
+[‘DECO-00000000-450a-7561-433f-0516209b4922’,
+‘DECO-ffffffff-bd6f-e5fb-842b-56b10033c587’]. Default is to include all
+device IDs.</p>
+</div></blockquote>
+<p><strong>return_metadata</strong> : boolean, optional</p>
+<blockquote>
+<div><p>Return a DataFrame with metadata information for each image file
+(default is False).</p>
+</div></blockquote>
+<p><strong>verbose</strong> : int {0, 1, or 2}</p>
+<blockquote>
+<div><p>Option to have verbose output when getting files. Where 0 is
+least verbose, while 2 is the most verbose.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">numpy.ndarray</p>
+<blockquote class="last">
+<div><p>Numpy array containing files that match specified criteria</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="blob-extraction">
+<h2>Blob Extraction<a class="headerlink" href="#blob-extraction" title="Permalink to this headline">¶</a></h2>
+<p>Finding interesting structure in images is done using the <code class="docutils literal"><span class="pre">extract_blobs</span></code> function.</p>
+<dl class="function">
+<dt id="decotools.blob_extraction.extract_blobs">
+<code class="descclassname">decotools.blob_extraction.</code><code class="descname">extract_blobs</code><span class="sig-paren">(</span><em>image_file</em>, <em>threshold=20.0</em>, <em>rgb_sum=False</em>, <em>min_area=10.0</em>, <em>max_area=1000.0</em>, <em>max_dist=5.0</em>, <em>group_max_area=None</em>, <em>size=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/decotools/blob_extraction.html#extract_blobs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#decotools.blob_extraction.extract_blobs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function to perform blob detection on an input image</p>
+<p>Blobs are found using the marching squares algorithm implemented in
+scikit-image.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>image_file</strong> : str</p>
+<blockquote>
+<div><p>Path to image file.</p>
+</div></blockquote>
+<p><strong>threshold</strong> : float, optional</p>
+<blockquote>
+<div><p>Threshold for blob detection. Only pixels with an intensity above
+this threshold will be used in blob detection (default: 20).</p>
+</div></blockquote>
+<p><strong>rgb_sum</strong> : bool, optional</p>
+<blockquote>
+<div><p>Whether to use a simple RGB sum to convert to image to grayscale, or
+to use a weighted RGB sum (default: False).</p>
+</div></blockquote>
+<p><strong>min_area</strong> : float, optional</p>
+<blockquote>
+<div><p>Minimum area for a blob to be kept. This helps get rid of noise in
+an image (default: 10).</p>
+</div></blockquote>
+<p><strong>max_area</strong> : float, optional</p>
+<blockquote>
+<div><p>Maximum area for a blob to be kept. This helps get rid of pathological
+events in an image (default: 1000).</p>
+</div></blockquote>
+<p><strong>max_dist</strong> : float, optional</p>
+<blockquote>
+<div><p>Distance scale for grouping close by blobs. If two blobs are separated
+by less than max_dist, they are grouped together as a single blob
+(defualt: 5).</p>
+</div></blockquote>
+<p><strong>group_max_area</strong> : float, optional</p>
+<blockquote>
+<div><p>Maximum area for a blob group to be kept. This helps get rid of
+pathological events in an image (default: None).</p>
+</div></blockquote>
+<p><strong>size</strong> : {None, int, array-like of shape=(2,)}, optional</p>
+<blockquote>
+<div><p>Size of zoomed image of extracted blobs. If an integer is provided, the
+zoomed image will be a square box of size 2*size in each dimension. If
+an array-like object (of shape=(2,)) is provided, then the zoomed image
+will be of size 2*size[0] by 2*size[1]. Otherwise, the default behavior
+is to return a square image of size twice the equivalent diameter of
+the blob.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">pandas.DataFrame</p>
+<blockquote class="last">
+<div><p>A DataFrame containing information about the found blobs is returned.
+Each row in the DataFrame corresponds to a blob group, while each
+column corresponds to a pertinent quanitity (area, eccentricity,
+zoomed image array, etc.).</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="metrics">
+<h2>Metrics<a class="headerlink" href="#metrics" title="Permalink to this headline">¶</a></h2>
+<p>Functions to calculate intensity metrics and histogram images are in the <code class="docutils literal"><span class="pre">metrics</span></code> module.</p>
+<dl class="function">
+<dt id="decotools.metrics.get_rgb_hists">
+<code class="descclassname">decotools.metrics.</code><code class="descname">get_rgb_hists</code><span class="sig-paren">(</span><em>files</em>, <em>cumulative=False</em>, <em>n_jobs=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/decotools/metrics.html#get_rgb_hists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#decotools.metrics.get_rgb_hists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates histograms of the pixel RGB sum distributions</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>files</strong> : str, sequence</p>
+<blockquote>
+<div><p>Image file path (or sequence of file paths) to be analyzed.</p>
+</div></blockquote>
+<p><strong>cumulative</strong> : bool, optional</p>
+<blockquote>
+<div><p>Option to calculate cumulative histograms. Histogrammed quantities
+will be N pixels &gt; threshold.</p>
+</div></blockquote>
+<p><strong>n_jobs</strong> : int, optional</p>
+<blockquote>
+<div><p>The number of jobs to run in parallel (default is 1).</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>hists</strong> : pandas.DataFrame</p>
+<blockquote class="last">
+<div><p>Dataframe containing histograms of pixel RGB sums.
+Each row of the Dataframe corresponds to a single image
+and each column corresponds to an RGB sum value.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="decotools.metrics.get_intensity_metrics">
+<code class="descclassname">decotools.metrics.</code><code class="descname">get_intensity_metrics</code><span class="sig-paren">(</span><em>files</em>, <em>rgb_sum=False</em>, <em>n_jobs=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/decotools/metrics.html#get_intensity_metrics"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#decotools.metrics.get_intensity_metrics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates various metrics related to the image intensity</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>files</strong> : str, sequence</p>
+<blockquote>
+<div><p>Image file path (or sequence of file paths) to be analyzed.</p>
+</div></blockquote>
+<p><strong>rgb_sum</strong> : bool, optional</p>
+<blockquote>
+<div><p>Option to use simple RGB sum for grayscale conversion (default is to
+use weighted RGB sum).</p>
+</div></blockquote>
+<p><strong>n_jobs</strong> : int, optional</p>
+<blockquote>
+<div><p>The number of jobs to run in parallel (default is 1).</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>image_intensities</strong> : pandas.DataFrame</p>
+<blockquote class="last">
+<div><p>DataFrame with intensity metrics</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="event-classification">
+<h2>Event classification<a class="headerlink" href="#event-classification" title="Permalink to this headline">¶</a></h2>
+<p>CNN event classification is done using the <code class="docutils literal"><span class="pre">CNN</span></code> object.</p>
+<dl class="class">
+<dt id="decotools.convnet.CNN">
+<em class="property">class </em><code class="descclassname">decotools.convnet.</code><code class="descname">CNN</code><span class="sig-paren">(</span><em>weights_file=None</em>, <em>model_file=None</em>, <em>custom_model=None</em>, <em>training=False</em>, <em>n_classes=4</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/decotools/convnet.html#CNN"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#decotools.convnet.CNN" title="Permalink to this definition">¶</a></dt>
+<dd><p>CNN class</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>weights_file</strong> : str, optional</p>
+<blockquote>
+<div><p>Path and file name of an hdf5 file containing the trained model
+weights to be used by the CNN (default is None).</p>
+</div></blockquote>
+<p><strong>model_file</strong> : str, optional</p>
+<blockquote>
+<div><p>Path and file name of an hdf5 file containing a trained model.
+Typically, this should only be used when continuing an existing
+training session (default is None).</p>
+</div></blockquote>
+<p><strong>custom_model</strong> : keras model, optional</p>
+<blockquote>
+<div><p>User-defined, compiled keras model to be used in place of the
+default (default is None).</p>
+</div></blockquote>
+<p><strong>training</strong> : bool, optional</p>
+<blockquote>
+<div><p>If True, initializes the model structure used for training. If
+False, initializes the model structure used for predictions
+(default is False).</p>
+</div></blockquote>
+<p><strong>n_classes</strong> : int, optional</p>
+<blockquote class="last">
+<div><p>Number of classes to be used by the CNN (default is 4).</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="decotools.convnet.CNN.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>images</em>, <em>labels</em>, <em>batch_size=32</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/decotools/convnet.html#CNN.evaluate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#decotools.convnet.CNN.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate accuracy and loss of model predictions</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>images</strong> : numpy.ndarray</p>
+<blockquote>
+<div><p>Array of grayscale, normalized images to be used for evaluation.
+Input shape = (n_image,n_row,n_cols,1).</p>
+</div></blockquote>
+<p><strong>labels</strong> : numpy.ndarray</p>
+<blockquote>
+<div><p>Array of labels to be used for evaluation, shape=(n_images,).</p>
+</div></blockquote>
+<p><strong>batch_size</strong> : int, optional</p>
+<blockquote>
+<div><p>Batch size to use for predictions (default is 32).</p>
+</div></blockquote>
+<p><strong>verbose</strong> : int, optional</p>
+<blockquote>
+<div><p>Verbosity mode to use, 0 or 1 (default is 0).</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list</p>
+<blockquote class="last">
+<div><p>list containing [test_loss, test_accuracy]</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="decotools.convnet.CNN.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>train_images</em>, <em>train_labels</em>, <em>test_images=None</em>, <em>test_labels=None</em>, <em>cv=None</em>, <em>batch_size=64</em>, <em>seed=None</em>, <em>epochs=800</em>, <em>initial_epoch=0</em>, <em>smooth_factor=0.004</em>, <em>horizontal_flip=True</em>, <em>vertical_flip=True</em>, <em>width_shift_range=0.08</em>, <em>height_shift_range=0.08</em>, <em>rotation_range=180.0</em>, <em>zoom_range=(0.9</em>, <em>1.1)</em>, <em>fill_mode='constant'</em>, <em>cval=0</em>, <em>shuffle=True</em>, <em>save_model=None</em>, <em>save_weights=None</em>, <em>save_history=None</em>, <em>check_point=None</em>, <em>check_point_weights_only=True</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/decotools/convnet.html#CNN.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#decotools.convnet.CNN.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit CNN</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>train_images</strong> : numpy.ndarray</p>
+<blockquote>
+<div><p>Array of grayscale, normalized images to be used for training the
+CNN. Input shape = (n_image,n_row,n_cols,1).</p>
+</div></blockquote>
+<p><strong>train_labels</strong> : numpy.ndarray</p>
+<blockquote>
+<div><p>Array of training labels, shape=(n_images,).</p>
+</div></blockquote>
+<p><strong>test_images</strong> : numpy.ndarray, optional</p>
+<blockquote>
+<div><p>Array of grayscale, normalized images to be used for testing the
+CNN. Input shape = (n_image,n_row,n_cols,1).</p>
+</div></blockquote>
+<p><strong>test_labels</strong> : numpy.ndarray, optional</p>
+<blockquote>
+<div><p>Array of testing labels, shape=(n_images,).</p>
+</div></blockquote>
+<p><strong>cv</strong> : int, scikit-learn cross validator, None, optional</p>
+<blockquote>
+<div><p>Option for cross-validation fitting. If <code class="docutils literal"><span class="pre">cv</span></code> is an integer
+<code class="docutils literal"><span class="pre">sklearn.model_selection.StratifiedKFold</span></code> will be used with
+<code class="docutils literal"><span class="pre">cv</span></code> number of folds. Other cross validators from
+<code class="docutils literal"><span class="pre">sklearn.model_selection</span></code> can be passed to <code class="docutils literal"><span class="pre">cv</span></code> as well
+(default is None).</p>
+</div></blockquote>
+<p><strong>batch_size</strong> : int, optional</p>
+<blockquote>
+<div><p>Number of samples per gradient update (default is 64).</p>
+</div></blockquote>
+<p><strong>seed</strong> : int, optional</p>
+<blockquote>
+<div><p>Random seed to be used for reproducibility. (default is None).</p>
+</div></blockquote>
+<p><strong>epochs</strong> : int, optional</p>
+<blockquote>
+<div><p>Number of epochs to train the model. Note that in conjunction with
+initial_epoch, the parameter epochs is to be understood as
+“final epoch”. (default is 800).</p>
+</div></blockquote>
+<p><strong>initial_epoch</strong> : int, optional</p>
+<blockquote>
+<div><p>Epoch at which to start training. Useful for resuming a previous
+training run (default is 0).</p>
+</div></blockquote>
+<p><strong>smooth_factor</strong> : float in range (0, 1), optional</p>
+<blockquote>
+<div><p>Level of smoothing to apply to one-hot label vector. Ex.
+smooth_factor of 0.004 applied to [0, 1, 0, 0], results in
+[0.001, 0.997, 0.001, 0.001] (default is 0.004).</p>
+</div></blockquote>
+<p><strong>horizontal_flip</strong> : bool, optional</p>
+<blockquote>
+<div><p>Randomly flip inputs horizontally (default is True).</p>
+</div></blockquote>
+<p><strong>vertical_flip</strong> : bool, optional</p>
+<blockquote>
+<div><p>Randomly flip inputs vertically (default is True).</p>
+</div></blockquote>
+<p><strong>width_shift_range</strong> : float, optional</p>
+<blockquote>
+<div><p>Range for random horizontal shifts (default is 0.08).</p>
+</div></blockquote>
+<p><strong>height_shift_range</strong> : float, optional</p>
+<blockquote>
+<div><p>Range for random vertical shifts (default is 0.08).</p>
+</div></blockquote>
+<p><strong>rotation_range</strong> : int, optional</p>
+<blockquote>
+<div><p>Degree range for random rotations (default is 180).</p>
+</div></blockquote>
+<p><strong>zoom_range</strong> : float or (lower, upper), optional</p>
+<blockquote>
+<div><p>Range for random zoom. If a float,
+<code class="docutils literal"><span class="pre">(lower,</span> <span class="pre">upper)</span> <span class="pre">=</span> <span class="pre">(1-zoom_range,</span> <span class="pre">1+zoom_range)</span></code> (default
+is <code class="docutils literal"><span class="pre">(0.9,</span> <span class="pre">1.1)</span></code>).</p>
+</div></blockquote>
+<p><strong>fill_mode</strong> : {“constant”, “nearest”, “reflect” or “wrap”}, optional</p>
+<blockquote>
+<div><p>Points outside the boundaries of the input are filled according to
+the given mode (default is “constant”).</p>
+</div></blockquote>
+<p><strong>cval</strong> : float or int, optional</p>
+<blockquote>
+<div><p>Value used for interpolated pixels when <code class="docutils literal"><span class="pre">fill_mode=&quot;constant&quot;</span></code>
+(default is 0).</p>
+</div></blockquote>
+<p><strong>shuffle</strong> : bool, optional</p>
+<blockquote>
+<div><p>Whether to shuffle the order of the batches at the beginning of
+each epoch (default is True).</p>
+</div></blockquote>
+<p><strong>save_model</strong> : str, optional</p>
+<blockquote>
+<div><p>If specified, a copy of the model from the final training epoch
+will be saved. For example, <code class="docutils literal"><span class="pre">save_model='my_model.h5'</span></code>.
+Typically used for continued training (default is None).</p>
+</div></blockquote>
+<p><strong>save_weights</strong> : str, optional</p>
+<blockquote>
+<div><p>If specified, a copy of the model weights from the final training
+epoch will be saved. For example, <code class="docutils literal"><span class="pre">save_weights='my_weights.h5'</span></code>
+(default is None).</p>
+</div></blockquote>
+<p><strong>save_history</strong> : str, optional</p>
+<blockquote>
+<div><p>If specified, the training history (accuracy and loss for training
+and testing) from each epoch will be saved to a CSV file.
+For example, <code class="docutils literal"><span class="pre">save_history='my_history.csv'</span></code> (default is None).</p>
+</div></blockquote>
+<p><strong>check_point</strong> : str, optional</p>
+<blockquote>
+<div><p>If specified, saves a running copy of the model corresponding to
+the lowest validation loss epoch. Each time a new low is reached,
+the previous best model is over-written by the new one.
+For example, <code class="docutils literal"><span class="pre">check_point='my_checkpoint.h5'</span></code> (default is None).</p>
+</div></blockquote>
+<p><strong>check_point_weights_only</strong> : bool, optional</p>
+<blockquote>
+<div><p>If True, only the model’s weights will be saved in the check
+point. Otherwise the full model is saved. Ignored if
+<code class="docutils literal"><span class="pre">check_point=False</span></code> (default is True).</p>
+</div></blockquote>
+<p><strong>verbose</strong> : bool, optional</p>
+<blockquote>
+<div><p>Option for verbose output.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>self</strong> : CNN</p>
+<blockquote class="last">
+<div><p>Trained CNN.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="decotools.convnet.CNN.model_summary">
+<code class="descname">model_summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/decotools/convnet.html#CNN.model_summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#decotools.convnet.CNN.model_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print summary of currently loaded model</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="decotools.convnet.CNN.predict">
+<code class="descname">predict</code><span class="sig-paren">(</span><em>images</em>, <em>batch_size=32</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/decotools/convnet.html#CNN.predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#decotools.convnet.CNN.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predict classifications for an input image array</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>images</strong> : numpy.ndarray</p>
+<blockquote>
+<div><p>Array of grayscale, normalized images to be used for class
+predictions. Input shape = (n_image,n_row,n_cols,1)</p>
+</div></blockquote>
+<p><strong>batch_size</strong> : int, optional</p>
+<blockquote>
+<div><p>Batch size to use for predictions (default is 32).</p>
+</div></blockquote>
+<p><strong>verbose</strong> : int, optional</p>
+<blockquote>
+<div><p>Verbosity mode to use, 0 or 1 (default is 0).</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">numpy.ndarray</p>
+<blockquote class="last">
+<div><p>Array containing class probabilities for each image. The array
+output is ordered as follows: [n_images, p(worm), p(spot),
+p(track), p(noise)]</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="contributing.html" class="btn btn-neutral float-right" title="Contributing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Decotools" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Deco team.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,531 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>decotools.fileio_iOS &mdash; decotools 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="decotools 0.0.1 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> decotools
+          
+
+          
+          </a>
+
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">Decotools API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/WIPACrepo/decotools">decotools &#64; GitHub</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/WIPACrepo/decotools/issues">Issue tracker</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">decotools</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>decotools.fileio_iOS</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for decotools.fileio_iOS</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">plistlib</span>
+<span class="kn">from</span> <span class="nn">xml.parsers.expat</span> <span class="k">import</span> <span class="n">ExpatError</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">dask</span>
+<span class="kn">from</span> <span class="nn">dask</span> <span class="k">import</span> <span class="n">delayed</span><span class="p">,</span> <span class="n">multiprocessing</span>
+<span class="kn">from</span> <span class="nn">dask.diagnostics</span> <span class="k">import</span> <span class="n">ProgressBar</span>
+
+<span class="c1"># Specify logging settings</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span>
+    <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%(levelname)s</span><span class="s1">: </span><span class="si">%(name)s</span><span class="s1"> - </span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="n">logging_level_dict</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">}</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="c1"># Define custom exceptions related to parsing metadata files</span>
+<span class="k">class</span> <span class="nc">NoMetadataFile</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Raised when no metadata file exists for an image file&#39;&#39;&#39;</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">EmptyMetadataFile</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Raised when a metadata files is empty&#39;&#39;&#39;</span>
+    <span class="k">pass</span>
+
+
+<span class="k">class</span> <span class="nc">UnknownMetadataIssue</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Raised when there is an unknown issue parsing a metadata file&#39;&#39;&#39;</span>
+    <span class="k">pass</span>
+
+
+<span class="k">def</span> <span class="nf">parse_xmlfile</span><span class="p">(</span><span class="n">xml_file</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Returns a dictionary with metadata information stored in xml_file</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">xml_dict</span> <span class="o">=</span> <span class="n">plistlib</span><span class="o">.</span><span class="n">readPlist</span><span class="p">(</span><span class="n">xml_file</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">NoMetadataFile</span><span class="p">(</span><span class="s1">&#39;No metadata file found for </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xml_file</span><span class="p">))</span>
+    <span class="k">except</span> <span class="n">ExpatError</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">xml_file</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">EmptyMetadataFile</span><span class="p">(</span>
+                    <span class="s1">&#39;The metadata file </span><span class="si">{}</span><span class="s1"> is empty&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xml_file</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">UnknownMetadataIssue</span><span class="p">(</span>
+                    <span class="s1">&#39;Ran into an error parsing </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">xml_file</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">xml_dict</span>
+
+
+<span class="k">def</span> <span class="nf">image_file_to_xml_file</span><span class="p">(</span><span class="n">image_file</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Function to return the xml file path for a corresponding image file path</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">directory</span><span class="p">,</span> <span class="n">image_file_basename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">image_file</span><span class="p">)</span>
+    <span class="n">xml_file_basename</span> <span class="o">=</span> <span class="s1">&#39;metadata-&#39;</span> <span class="o">+</span> <span class="n">image_file_basename</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.png&#39;</span><span class="p">,</span>
+                                                                  <span class="s1">&#39;.xml&#39;</span><span class="p">)</span>
+    <span class="n">xml_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">xml_file_basename</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">xml_file</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">xml_file</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># if xml_file does not contain &#39;metadata-&#39; in the name, try without it</span>
+        <span class="n">xml_file_basename</span> <span class="o">=</span> <span class="n">image_file_basename</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.png&#39;</span><span class="p">,</span> <span class="s1">&#39;.xml&#39;</span><span class="p">)</span>
+        <span class="n">xml_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span> <span class="n">xml_file_basename</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">xml_file</span>
+
+
+<span class="k">def</span> <span class="nf">get_id_from_filename</span><span class="p">(</span><span class="n">image_file</span><span class="p">):</span>
+    <span class="n">file_basename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">image_file</span><span class="p">)</span>
+    <span class="n">phone_id</span> <span class="o">=</span> <span class="n">file_basename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">phone_id</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+
+<span class="k">def</span> <span class="nf">get_time_from_filename</span><span class="p">(</span><span class="n">image_file</span><span class="p">):</span>
+    <span class="n">file_basename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">image_file</span><span class="p">)</span>
+    <span class="n">file_name</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">file_basename</span><span class="p">)</span>
+    <span class="n">date</span> <span class="o">=</span> <span class="n">file_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">time</span> <span class="o">=</span> <span class="n">file_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">date</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">time</span><span class="p">,</span> <span class="n">utc</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">get_metadata_dataframe_batches</span><span class="p">(</span><span class="n">files</span><span class="p">):</span>
+
+    <span class="c1"># If files is empty, then just return an empty DataFrame</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+
+    <span class="n">xml_data</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">image_file</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">files</span><span class="p">):</span>
+        <span class="n">xml_file</span> <span class="o">=</span> <span class="n">image_file_to_xml_file</span><span class="p">(</span><span class="n">image_file</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">xml_dict</span> <span class="o">=</span> <span class="n">parse_xmlfile</span><span class="p">(</span><span class="n">xml_file</span><span class="p">)</span>
+            <span class="n">xml_dict</span><span class="p">[</span><span class="s1">&#39;metadata_exists&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">xml_dict</span><span class="p">[</span><span class="s1">&#39;metadata_empty&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">xml_dict</span><span class="p">[</span><span class="s1">&#39;metadata_parsing_error&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">except</span> <span class="n">NoMetadataFile</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">exception</span><span class="p">)</span>
+            <span class="n">xml_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;metadata_exists&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+        <span class="k">except</span> <span class="n">EmptyMetadataFile</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">exception</span><span class="p">)</span>
+            <span class="n">xml_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;metadata_empty&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+        <span class="k">except</span> <span class="n">UnknownMetadataIssue</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">exception</span><span class="p">)</span>
+            <span class="n">xml_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;metadata_parsing_error&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+
+        <span class="n">xml_dict</span><span class="p">[</span><span class="s1">&#39;image_file&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">image_file</span>
+        <span class="n">xml_dict</span><span class="p">[</span><span class="s1">&#39;min_bias&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="s1">&#39;minBias&#39;</span> <span class="ow">in</span> <span class="n">image_file</span> <span class="k">else</span> <span class="kc">False</span>
+        <span class="c1"># Time and device ID info can be extracted from the image file name</span>
+        <span class="c1"># (so we have some info if there is an issue w/metadata file)</span>
+        <span class="n">xml_dict</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_time_from_filename</span><span class="p">(</span><span class="n">image_file</span><span class="p">)</span>
+        <span class="n">xml_dict</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_id_from_filename</span><span class="p">(</span><span class="n">image_file</span><span class="p">)</span>
+
+        <span class="n">xml_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_records</span><span class="p">(</span><span class="n">xml_dict</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+        <span class="n">xml_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xml_df</span><span class="p">)</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">xml_data</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">df</span>
+
+
+<span class="k">def</span> <span class="nf">get_metadata_dataframe</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+
+    <span class="c1"># Split files into batches to be processed (potentially) in parallel</span>
+    <span class="n">batches</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array_split</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)))</span>
+    <span class="n">df_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">delayed</span><span class="p">(</span><span class="n">get_metadata_dataframe_batches</span><span class="p">)(</span><span class="n">batch</span><span class="p">)</span>
+               <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">batches</span><span class="p">]</span>
+    <span class="n">df_merged</span> <span class="o">=</span> <span class="n">delayed</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">)(</span><span class="n">df_list</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Extracting metadata information:&#39;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">ProgressBar</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">n_jobs</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">df_merged</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">get</span><span class="o">=</span><span class="n">dask</span><span class="o">.</span><span class="n">get</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">df_merged</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">get</span><span class="o">=</span><span class="n">multiprocessing</span><span class="o">.</span><span class="n">get</span><span class="p">,</span>
+                                   <span class="n">num_workers</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">df</span>
+
+
+<span class="k">def</span> <span class="nf">validate_filter_input</span><span class="p">(</span><span class="n">user_input</span><span class="p">):</span>
+
+    <span class="k">if</span> <span class="n">user_input</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">user_input</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">user_input</span> <span class="o">=</span> <span class="p">[</span><span class="n">user_input</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">user_input</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="nb">set</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Input must be array-like, &#39;</span>
+                        <span class="s1">&#39;got </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">user_input</span><span class="p">)))</span>
+
+    <span class="k">return</span> <span class="n">user_input</span>
+
+
+<span class="k">def</span> <span class="nf">filter_dataframe</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">metadata_key</span><span class="p">,</span> <span class="n">desired_values</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;df must be a pandas.DataFrame, &#39;</span>
+                        <span class="s1">&#39;got </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">df</span><span class="p">)))</span>
+    <span class="k">if</span> <span class="n">desired_values</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">desired_values</span><span class="p">,</span>
+                                         <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="nb">set</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;desired_values must be array-like&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">desired_values</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">metadata_key</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">desired_values</span><span class="p">)]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">df</span>
+
+
+<span class="k">def</span> <span class="nf">get_date_files</span><span class="p">(</span><span class="n">dates</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">,</span> <span class="n">image_ext</span><span class="o">=</span><span class="s1">&#39;png&#39;</span><span class="p">):</span>
+    <span class="n">file_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">date</span> <span class="ow">in</span> <span class="n">dates</span><span class="p">:</span>
+        <span class="n">date_files_pattern</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span>
+                                          <span class="s1">&#39;*.</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">image_ext</span><span class="p">))</span>
+        <span class="n">file_list</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">date_files_pattern</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">file_list</span>
+
+
+<div class="viewcode-block" id="get_iOS_files"><a class="viewcode-back" href="../../api.html#decotools.fileio_iOS.get_iOS_files">[docs]</a><span class="k">def</span> <span class="nf">get_iOS_files</span><span class="p">(</span><span class="n">start_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">data_dir</span><span class="o">=</span><span class="s1">&#39;/net/deco/iOSdata&#39;</span><span class="p">,</span>
+                  <span class="n">include_events</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">include_min_bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                  <span class="n">phone_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">device_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_metadata</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                  <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Function to retrieve deco iOS image files</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    start_date : str, optional</span>
+<span class="sd">        Starting date for the iOS files to retrieve. Use any common</span>
+<span class="sd">        date format (e.g. &#39;2017-01-01&#39;, &#39;20170101&#39;, &#39;Jan 1, 2017&#39;, etc).</span>
+<span class="sd">        Default starting date is &#39;2016.01.01&#39;.</span>
+<span class="sd">    end_date : str, optional</span>
+<span class="sd">        Ending date for the iOS files to retrieve. Use any common</span>
+<span class="sd">        date format (e.g. &#39;2017-01-01&#39;, &#39;20170101&#39;, &#39;Jan 1, 2017&#39;, etc).</span>
+<span class="sd">        Default is the current date.</span>
+<span class="sd">    data_dir : str, optional</span>
+<span class="sd">        Base directory to search for iOS image files.</span>
+<span class="sd">    include_events : bool, optional</span>
+<span class="sd">        Option to include images files flagged as events. Default is True.</span>
+<span class="sd">    include_min_bias : bool, optional</span>
+<span class="sd">        Option to include minimum bias image files. Default is False.</span>
+<span class="sd">    phone_model : str or array-like, optional</span>
+<span class="sd">        Option to specify which phone models you would like to look at.</span>
+<span class="sd">        Can be either a string, e.g. &#39;iPhone 7&#39;, or a list of models,</span>
+<span class="sd">        e.g. [&#39;iPhone 5&#39;, &#39;iPhone 5s&#39;]. Default is to include all</span>
+<span class="sd">        phone models.</span>
+<span class="sd">    device_id : str or array-like, optional</span>
+<span class="sd">        Option to specify which devices you want to look at. Can</span>
+<span class="sd">        either be a string, e.g. &#39;EFD5764E-7209-4579-B0A8-EAF80C950147&#39;, or</span>
+<span class="sd">        a list of device IDs, e.g. [&#39;EFD5764E-7209-4579-B0A8-EAF80C950147&#39;,</span>
+<span class="sd">        &#39;F216114B-8710-4790-A05D-D645C9C79C27&#39;]. Default is to include all</span>
+<span class="sd">        device IDs.</span>
+<span class="sd">    return_metadata : boolean, optional</span>
+<span class="sd">        Return a DataFrame with metadata information for each image file</span>
+<span class="sd">        (default is False).</span>
+<span class="sd">    n_jobs : int, optional</span>
+<span class="sd">        The number of jobs to run in parallel (default is 1).</span>
+<span class="sd">    verbose : int {0, 1, or 2}</span>
+<span class="sd">        Option to have verbose output when getting files. Where 0 is</span>
+<span class="sd">        least verbose, while 2 is the most verbose.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    numpy.ndarray</span>
+<span class="sd">        Numpy array containing files that match specified criteria</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># Validate include_min_bias and include_events:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">([</span><span class="n">include_events</span><span class="p">,</span> <span class="n">include_min_bias</span><span class="p">]):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;At least one of include_events or include_min_bias &#39;</span>
+                         <span class="s1">&#39;must be True.&#39;</span><span class="p">)</span>
+    <span class="c1"># Validate user input for verbose parameter</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">verbose</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Expecting an int for verbose, &#39;</span>
+                         <span class="s1">&#39;got </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">verbose</span><span class="p">)))</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging_level_dict</span><span class="p">[</span><span class="n">verbose</span><span class="p">])</span>
+    <span class="c1"># Validate user input for filtering values</span>
+    <span class="n">phone_model</span> <span class="o">=</span> <span class="n">validate_filter_input</span><span class="p">(</span><span class="n">phone_model</span><span class="p">)</span>
+    <span class="n">device_id</span> <span class="o">=</span> <span class="n">validate_filter_input</span><span class="p">(</span><span class="n">device_id</span><span class="p">)</span>
+
+    <span class="c1"># If no end_date specified, set as today&#39;s date</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">end_date</span><span class="p">:</span>
+        <span class="n">end_date</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y.%m.</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="c1"># If no start_date specified, set as some early date</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">start_date</span><span class="p">:</span>
+        <span class="n">start_date</span> <span class="o">=</span> <span class="s1">&#39;2016.01.01&#39;</span>
+    <span class="c1"># Get list of dates between start_date and end_date</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">dates</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">)</span>
+        <span class="n">dates</span> <span class="o">=</span> <span class="n">dates</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y.%m.</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid start_date or end_date entered&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Build up list of all image files within the start_date to end_date range</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">data_dir</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;data_dir, </span><span class="si">{}</span><span class="s1">, does not exist.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">data_dir</span><span class="p">))</span>
+    <span class="n">file_list</span> <span class="o">=</span> <span class="n">get_date_files</span><span class="p">(</span><span class="n">dates</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">,</span> <span class="n">image_ext</span><span class="o">=</span><span class="s1">&#39;png&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;No files for found for the specified date range&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">file_list</span>
+
+    <span class="c1"># If specified, filter out events/minimum bias images appropriately</span>
+    <span class="k">if</span> <span class="n">include_events</span> <span class="ow">and</span> <span class="n">include_min_bias</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">elif</span> <span class="n">include_events</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">include_min_bias</span><span class="p">:</span>
+        <span class="n">file_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">file_list</span> <span class="k">if</span> <span class="s1">&#39;minBias&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">f</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">include_events</span> <span class="ow">and</span> <span class="n">include_min_bias</span><span class="p">:</span>
+        <span class="n">file_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">file_list</span> <span class="k">if</span> <span class="s1">&#39;minBias&#39;</span> <span class="ow">in</span> <span class="n">f</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">file_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s1">&#39;No files remaining after event vs. minimum bias filtering&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">file_list</span>
+
+    <span class="c1"># If specified, filter out files based on device ID appropriately</span>
+    <span class="k">if</span> <span class="n">device_id</span><span class="p">:</span>
+        <span class="n">file_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">file_list</span>
+                     <span class="k">if</span> <span class="n">get_id_from_filename</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="ow">in</span> <span class="n">device_id</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">([</span><span class="n">phone_model</span><span class="p">,</span> <span class="n">return_metadata</span><span class="p">]):</span>
+        <span class="n">file_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">file_list</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Construct DataFrame containing metadata to use for filtering</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">get_metadata_dataframe</span><span class="p">(</span><span class="n">file_list</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">)</span>
+
+        <span class="c1"># Filter out image files based on user input</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">pipe</span><span class="p">(</span><span class="n">filter_dataframe</span><span class="p">,</span> <span class="n">metadata_key</span><span class="o">=</span><span class="s1">&#39;Model&#39;</span><span class="p">,</span>
+                      <span class="n">desired_values</span><span class="o">=</span><span class="n">phone_model</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+
+        <span class="c1"># Log info about images</span>
+        <span class="n">num_images_str</span> <span class="o">=</span> <span class="s1">&#39;Found </span><span class="si">{}</span><span class="s1"> image files&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">n_devices</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span>
+        <span class="n">num_devices_str</span> <span class="o">=</span> <span class="s1">&#39;Found </span><span class="si">{}</span><span class="s1"> unique devices&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n_devices</span><span class="p">)</span>
+        <span class="n">models_str</span> <span class="o">=</span> <span class="s1">&#39;Models present:&#39;</span>
+        <span class="n">models</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;Model&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">models</span><span class="p">:</span>
+            <span class="n">model_frac</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;Model&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">model</span><span class="p">)</span><span class="o">/</span><span class="n">df</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">models_str</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\n\t\t</span><span class="si">{}</span><span class="s1"> [ </span><span class="si">{:0.1%}</span><span class="s1"> ]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">model_frac</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s1">&#39;</span><span class="se">\n\t</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">num_images_str</span><span class="p">,</span> <span class="n">num_devices_str</span><span class="p">,</span> <span class="n">models_str</span><span class="p">]))</span>
+
+        <span class="k">if</span> <span class="n">return_metadata</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">df</span>
+
+        <span class="n">file_array</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;image_file&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+
+    <span class="k">return</span> <span class="n">file_array</span></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Deco team.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

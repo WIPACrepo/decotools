@@ -1,0 +1,590 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>decotools.blob_extraction &mdash; decotools 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="decotools 0.0.1 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> decotools
+          
+
+          
+          </a>
+
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">Decotools API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/WIPACrepo/decotools">decotools &#64; GitHub</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/WIPACrepo/decotools/issues">Issue tracker</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">decotools</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>decotools.blob_extraction</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for decotools.blob_extraction</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">skimage</span> <span class="k">import</span> <span class="n">io</span><span class="p">,</span> <span class="n">measure</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="k">import</span> <span class="n">Image</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">Counter</span><span class="p">,</span> <span class="n">Iterable</span>
+
+
+<span class="k">def</span> <span class="nf">get_image_array</span><span class="p">(</span><span class="n">image_file</span><span class="p">,</span> <span class="n">rgb_sum</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Returns an image array</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    image_file : str</span>
+<span class="sd">        Path to image file.</span>
+<span class="sd">    rgb_sum : bool, optional</span>
+<span class="sd">        Whether to use a simple RGB sum to convert to image to grayscale, or</span>
+<span class="sd">        to use a weighted RGB sum (default: False).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    numpy.ndarray</span>
+<span class="sd">        Grayscale image array</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="n">rgb_sum</span><span class="p">:</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">image_file</span><span class="p">)</span>
+        <span class="c1"># Convert RGB image to R+G+B grayscale</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">image</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">image_file</span><span class="p">)</span>
+        <span class="c1"># Convert grayscale using a weighted RGB sum</span>
+        <span class="c1"># From PIL documentation the weighted sum is given by</span>
+        <span class="c1"># grayscale = R * 299/1000 + G * 587/1000 + B * 114/1000</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s1">&#39;L&#39;</span><span class="p">)</span>
+        <span class="c1"># Convert img to a numpy array</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="k">return</span> <span class="n">image</span>
+
+
+<span class="k">class</span> <span class="nc">Blob</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Class that defines a &#39;blob&#39; in an image: the contour of a set of pixels</span>
+<span class="sd">       with values above a given threshold.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Define a counter by its contour lines (an list of points in the xy</span>
+<span class="sd">           plane), the contour centroid, and its enclosed area.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">yc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_length</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># Find the area inside the contour</span>
+        <span class="n">area</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_length</span><span class="p">):</span>
+            <span class="n">area</span> <span class="o">+=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">area</span> <span class="o">=</span> <span class="n">area</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">str_rep</span> <span class="o">=</span> <span class="s1">&#39;Blob(xc=</span><span class="si">{}</span><span class="s1">, yc=</span><span class="si">{}</span><span class="s1">, area=</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">yc</span><span class="p">,</span>
+                                                       <span class="bp">self</span><span class="o">.</span><span class="n">area</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">str_rep</span>
+
+    <span class="k">def</span> <span class="nf">length</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39; Find the approx length of the blob from the max points of the</span>
+<span class="sd">            contour. &#39;&#39;&#39;</span>
+        <span class="n">xMin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="n">xMax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="n">yMin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="n">yMax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="n">len_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">xMin</span> <span class="o">-</span> <span class="n">xMax</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">yMin</span> <span class="o">-</span> <span class="n">yMax</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">len_</span>
+
+    <span class="k">def</span> <span class="nf">distance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blob</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Calculate the distance between the centroid of this blob contour and</span>
+<span class="sd">           another one in the xy plane.&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">xc</span> <span class="o">-</span> <span class="n">blob</span><span class="o">.</span><span class="n">xc</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">yc</span><span class="o">-</span><span class="n">blob</span><span class="o">.</span><span class="n">yc</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">findblobs</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">min_area</span><span class="o">=</span><span class="mf">2.</span><span class="p">,</span> <span class="n">max_area</span><span class="o">=</span><span class="mf">1000.</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Pass through an image and find a set of blobs/contours above a set</span>
+<span class="sd">       threshold value.  The min_area parameter is used to exclude blobs with</span>
+<span class="sd">       an area below this value.&#39;&#39;&#39;</span>
+    <span class="n">blobs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="c1"># Find contours using the Marching Squares algorithm in the scikit package.</span>
+    <span class="n">contours</span> <span class="o">=</span> <span class="n">measure</span><span class="o">.</span><span class="n">find_contours</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">threshold</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">contour</span> <span class="ow">in</span> <span class="n">contours</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">contour</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">contour</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">blob</span> <span class="o">=</span> <span class="n">Blob</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">area</span> <span class="o">&gt;=</span> <span class="n">min_area</span> <span class="ow">and</span> <span class="n">blob</span><span class="o">.</span><span class="n">area</span> <span class="o">&lt;=</span> <span class="n">max_area</span><span class="p">:</span>
+            <span class="n">blobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">blob</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">blobs</span>
+
+
+<span class="k">class</span> <span class="nc">BlobGroup</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;A list of blobs that is grouped or associated in some way, i.e., if</span>
+<span class="sd">       their contour centroids are relatively close together.&#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Initialize a list of stored blobs and the bounding rectangle which</span>
+<span class="sd">        defines the group.&#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">blobs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xmin</span> <span class="o">=</span> <span class="mf">1e10</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1e10</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span> <span class="o">=</span> <span class="mf">1e10</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1e10</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">image</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xc</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">yc</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">str_rep</span> <span class="o">=</span> <span class="s1">&#39;BlobGroup(n_blobs=</span><span class="si">{}</span><span class="s1">, xc=</span><span class="si">{}</span><span class="s1">, yc=</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blobs</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">xc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">yc</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">str_rep</span>
+
+    <span class="k">def</span> <span class="nf">add_blob</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blob</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Add a blob to the group and enlarge the bounding rectangle of the</span>
+<span class="sd">           group.&#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">blobs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">blob</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xmin</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">,</span> <span class="n">blob</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmax</span><span class="p">,</span> <span class="n">blob</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">,</span> <span class="n">blob</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ymax</span><span class="p">,</span> <span class="n">blob</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="n">b</span><span class="o">.</span><span class="n">xc</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blobs</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">yc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="n">b</span><span class="o">.</span><span class="n">yc</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blobs</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">get_bounding_box</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Get the bounding rectangle of the group.&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_square_bounding_box</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Get the bounding rectangle, redefined to give it a square aspect</span>
+<span class="sd">           ratio.&#39;&#39;&#39;</span>
+        <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ymax</span><span class="p">)</span>
+        <span class="n">xL</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">xmax</span> <span class="o">-</span> <span class="n">xmin</span><span class="p">)</span>
+        <span class="n">yL</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ymax</span> <span class="o">-</span> <span class="n">ymin</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">xL</span> <span class="o">&gt;</span> <span class="n">yL</span><span class="p">:</span>
+            <span class="n">ymin</span> <span class="o">-=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">xL</span><span class="o">-</span><span class="n">yL</span><span class="p">)</span>
+            <span class="n">ymax</span> <span class="o">+=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">xL</span><span class="o">-</span><span class="n">yL</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">xmin</span> <span class="o">-=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">yL</span><span class="o">-</span><span class="n">xL</span><span class="p">)</span>
+            <span class="n">xmax</span> <span class="o">+=</span> <span class="mf">0.5</span><span class="o">*</span><span class="p">(</span><span class="n">yL</span><span class="o">-</span><span class="n">xL</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_sub_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Given an image, extract the section of the image corresponding to</span>
+<span class="sd">           the bounding box of the blob group.&#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="n">image</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">if</span> <span class="n">size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">x0</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">y1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_square_bounding_box</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">xc</span><span class="p">,</span> <span class="n">yc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">yc</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">):</span>
+                <span class="n">size_x</span><span class="p">,</span> <span class="n">size_y</span> <span class="o">=</span> <span class="n">size</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">size_x</span> <span class="o">=</span> <span class="n">size_y</span> <span class="o">=</span> <span class="n">size</span>
+            <span class="n">x0</span><span class="p">,</span> <span class="n">x1</span> <span class="o">=</span> <span class="n">xc</span> <span class="o">-</span> <span class="n">size_x</span><span class="p">,</span> <span class="n">xc</span> <span class="o">+</span> <span class="n">size_x</span>
+            <span class="n">y0</span><span class="p">,</span> <span class="n">y1</span> <span class="o">=</span> <span class="n">yc</span> <span class="o">-</span> <span class="n">size_y</span><span class="p">,</span> <span class="n">yc</span> <span class="o">+</span> <span class="n">size_y</span>
+
+        <span class="c1"># Account for all the weird row/column magic in the image table...</span>
+        <span class="n">i0</span><span class="p">,</span> <span class="n">i1</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">x0</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">x1</span><span class="p">)</span>
+        <span class="n">j0</span><span class="p">,</span> <span class="n">j1</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">y0</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">y1</span><span class="p">)</span>
+
+        <span class="c1"># Add a pixel buffer around the bounds, and check the ranges</span>
+        <span class="n">buf</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">i0</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">i0</span><span class="o">-</span><span class="n">buf</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">i0</span><span class="o">-</span><span class="n">buf</span>
+        <span class="n">i1</span> <span class="o">=</span> <span class="n">nx</span><span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="n">i1</span> <span class="o">&gt;</span> <span class="n">nx</span><span class="o">-</span><span class="mi">1</span> <span class="k">else</span> <span class="n">i1</span><span class="o">+</span><span class="n">buf</span>
+        <span class="n">j0</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">j0</span><span class="o">-</span><span class="n">buf</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">j0</span><span class="o">-</span><span class="n">buf</span>
+        <span class="n">j1</span> <span class="o">=</span> <span class="n">ny</span><span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="n">j1</span> <span class="o">&gt;</span> <span class="n">ny</span><span class="o">-</span><span class="mi">1</span> <span class="k">else</span> <span class="n">j1</span><span class="o">+</span><span class="n">buf</span>
+
+        <span class="k">return</span> <span class="n">image</span><span class="p">[</span><span class="n">i0</span><span class="p">:</span><span class="n">i1</span><span class="p">,</span> <span class="n">j0</span><span class="p">:</span><span class="n">j1</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">get_region_props</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">subimage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sub_image</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">)</span>
+        <span class="n">labeled_image</span> <span class="o">=</span> <span class="n">subimage</span> <span class="o">&gt;=</span> <span class="n">threshold</span>
+        <span class="n">region_properties</span> <span class="o">=</span> <span class="n">measure</span><span class="o">.</span><span class="n">regionprops</span><span class="p">(</span><span class="n">labeled_image</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span>
+                                                <span class="n">subimage</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">region_properties</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{}</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">region_properties</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Image has more than one region!&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">region_properties</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">group_blobs</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">blobs</span><span class="p">,</span> <span class="n">max_dist</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Given a list of blobs, group them by distance between the centroids of</span>
+<span class="sd">       any two blobs.  If the centroids are more distant than max_dist, create</span>
+<span class="sd">       a new blob group.&#39;&#39;&#39;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">blobs</span><span class="p">)</span>
+    <span class="n">groups</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># Single-pass clustering algorithm: make the first blob the nucleus of</span>
+        <span class="c1"># a blob group.  Then loop through each blob and add either add it to</span>
+        <span class="c1"># this group (depending on the distance measure) or make it the</span>
+        <span class="c1"># nucleus of a new blob group</span>
+        <span class="n">bg</span> <span class="o">=</span> <span class="n">BlobGroup</span><span class="p">(</span><span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">)</span>
+        <span class="n">bg</span><span class="o">.</span><span class="n">add_blob</span><span class="p">(</span><span class="n">blobs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bg</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+            <span class="n">bi</span> <span class="o">=</span> <span class="n">blobs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">is_grouped</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">:</span>
+                <span class="c1"># Calculate distance measure for a blob and a blob group:</span>
+                <span class="c1"># blob has to be &lt; max_dist from any other blob in the group</span>
+                <span class="k">for</span> <span class="n">bj</span> <span class="ow">in</span> <span class="n">group</span><span class="o">.</span><span class="n">blobs</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">bi</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="n">bj</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">max_dist</span><span class="p">:</span>
+                        <span class="n">group</span><span class="o">.</span><span class="n">add_blob</span><span class="p">(</span><span class="n">bi</span><span class="p">)</span>
+                        <span class="n">is_grouped</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">break</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_grouped</span><span class="p">:</span>
+                <span class="n">bg</span> <span class="o">=</span> <span class="n">BlobGroup</span><span class="p">(</span><span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">)</span>
+                <span class="n">bg</span><span class="o">.</span><span class="n">add_blob</span><span class="p">(</span><span class="n">bi</span><span class="p">)</span>
+                <span class="n">groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bg</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">groups</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="extract_blobs"><a class="viewcode-back" href="../../api.html#decotools.blob_extraction.extract_blobs">[docs]</a><span class="k">def</span> <span class="nf">extract_blobs</span><span class="p">(</span><span class="n">image_file</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">20.</span><span class="p">,</span> <span class="n">rgb_sum</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">min_area</span><span class="o">=</span><span class="mf">10.</span><span class="p">,</span>
+                  <span class="n">max_area</span><span class="o">=</span><span class="mf">1000.</span><span class="p">,</span> <span class="n">max_dist</span><span class="o">=</span><span class="mf">5.</span><span class="p">,</span> <span class="n">group_max_area</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Function to perform blob detection on an input image</span>
+
+<span class="sd">    Blobs are found using the marching squares algorithm implemented in</span>
+<span class="sd">    scikit-image.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    image_file : str</span>
+<span class="sd">        Path to image file.</span>
+<span class="sd">    threshold : float, optional</span>
+<span class="sd">        Threshold for blob detection. Only pixels with an intensity above</span>
+<span class="sd">        this threshold will be used in blob detection (default: 20).</span>
+<span class="sd">    rgb_sum : bool, optional</span>
+<span class="sd">        Whether to use a simple RGB sum to convert to image to grayscale, or</span>
+<span class="sd">        to use a weighted RGB sum (default: False).</span>
+<span class="sd">    min_area : float, optional</span>
+<span class="sd">        Minimum area for a blob to be kept. This helps get rid of noise in</span>
+<span class="sd">        an image (default: 10).</span>
+<span class="sd">    max_area : float, optional</span>
+<span class="sd">        Maximum area for a blob to be kept. This helps get rid of pathological</span>
+<span class="sd">        events in an image (default: 1000).</span>
+<span class="sd">    max_dist : float, optional</span>
+<span class="sd">        Distance scale for grouping close by blobs. If two blobs are separated</span>
+<span class="sd">        by less than max_dist, they are grouped together as a single blob</span>
+<span class="sd">        (defualt: 5).</span>
+<span class="sd">    group_max_area : float, optional</span>
+<span class="sd">        Maximum area for a blob group to be kept. This helps get rid of</span>
+<span class="sd">        pathological events in an image (default: None).</span>
+<span class="sd">    size : {None, int, array-like of shape=(2,)}, optional</span>
+<span class="sd">        Size of zoomed image of extracted blobs. If an integer is provided, the</span>
+<span class="sd">        zoomed image will be a square box of size 2*size in each dimension. If</span>
+<span class="sd">        an array-like object (of shape=(2,)) is provided, then the zoomed image</span>
+<span class="sd">        will be of size 2*size[0] by 2*size[1]. Otherwise, the default behavior</span>
+<span class="sd">        is to return a square image of size twice the equivalent diameter of</span>
+<span class="sd">        the blob.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pandas.DataFrame</span>
+<span class="sd">        A DataFrame containing information about the found blobs is returned.</span>
+<span class="sd">        Each row in the DataFrame corresponds to a blob group, while each</span>
+<span class="sd">        column corresponds to a pertinent quanitity (area, eccentricity,</span>
+<span class="sd">        zoomed image array, etc.).</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">get_image_array</span><span class="p">(</span><span class="n">image_file</span><span class="p">,</span> <span class="n">rgb_sum</span><span class="o">=</span><span class="n">rgb_sum</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+
+    <span class="c1"># Calculate contours using the scikit-image marching squares algorithm,</span>
+    <span class="c1"># store as Blobs, and group the Blobs into associated clusters</span>
+    <span class="n">blobs</span> <span class="o">=</span> <span class="n">findblobs</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
+                      <span class="n">min_area</span><span class="o">=</span><span class="n">min_area</span><span class="p">,</span> <span class="n">max_area</span><span class="o">=</span><span class="n">max_area</span><span class="p">)</span>
+    <span class="n">groups</span> <span class="o">=</span> <span class="n">group_blobs</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">blobs</span><span class="p">,</span> <span class="n">max_dist</span><span class="o">=</span><span class="n">max_dist</span><span class="p">)</span>
+
+    <span class="n">group_properties</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">group_idx</span><span class="p">,</span> <span class="n">group</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">groups</span><span class="p">):</span>
+        <span class="n">region_props</span> <span class="o">=</span> <span class="n">group</span><span class="o">.</span><span class="n">get_region_props</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">)</span>
+        <span class="n">prop_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">property_</span><span class="p">:</span> <span class="n">region_props</span><span class="p">[</span><span class="n">property_</span><span class="p">]</span>
+                     <span class="k">for</span> <span class="n">property_</span> <span class="ow">in</span> <span class="n">region_props</span><span class="p">}</span>
+        <span class="n">prop_dict</span><span class="p">[</span><span class="s1">&#39;n_blobs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="o">.</span><span class="n">blobs</span><span class="p">)</span>
+        <span class="n">prop_dict</span><span class="p">[</span><span class="s1">&#39;n_groups&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
+        <span class="n">prop_dict</span><span class="p">[</span><span class="s1">&#39;blob_idx&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">group_idx</span>
+        <span class="n">prop_dict</span><span class="p">[</span><span class="s1">&#39;xc&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">group</span><span class="o">.</span><span class="n">xc</span>
+        <span class="n">prop_dict</span><span class="p">[</span><span class="s1">&#39;yc&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">group</span><span class="o">.</span><span class="n">yc</span>
+        <span class="k">if</span> <span class="n">size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="n">prop_dict</span><span class="p">[</span><span class="s1">&#39;equivalent_diameter&#39;</span><span class="p">]</span>
+        <span class="n">prop_dict</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">group</span><span class="o">.</span><span class="n">get_sub_image</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">)</span>
+        <span class="n">prop_dict</span><span class="p">[</span><span class="s1">&#39;image_file&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">image_file</span>
+
+        <span class="k">if</span> <span class="n">group_max_area</span> <span class="ow">and</span> <span class="n">prop_dict</span><span class="p">[</span><span class="s1">&#39;area&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">group_max_area</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">group_properties</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prop_dict</span><span class="p">)</span>
+
+    <span class="n">region_prop_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_records</span><span class="p">(</span><span class="n">group_properties</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">region_prop_df</span></div>
+
+
+<span class="k">def</span> <span class="nf">is_hotspot</span><span class="p">(</span><span class="n">x_coords</span><span class="p">,</span> <span class="n">y_coords</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mf">4.0</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Function to identify hot spot from a list of x-y coordinates</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x_coords : array-like</span>
+<span class="sd">        X-coordinates of blob groups. Note: x_coords and y_coords must have</span>
+<span class="sd">        the same shape.</span>
+<span class="sd">    y_coords : array-like</span>
+<span class="sd">        Y-coordinates of blob groups. Note: y_coords and x_coords must have</span>
+<span class="sd">        the same shape.</span>
+<span class="sd">    threshold : int, optional</span>
+<span class="sd">        Threshold number of counts to classify an x-y coordinate pair as a hot</span>
+<span class="sd">        spot. If a (x, y) coordinate pair occurs threshold or more times,</span>
+<span class="sd">        it is considered a hot spot (default is 3).</span>
+<span class="sd">    radius : float, optional</span>
+<span class="sd">        If an x-y pair is within radius number of pixels of a hot spot, it</span>
+<span class="sd">        is also considered a hot spot.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    is_hot_spot : numpy.ndarray</span>
+<span class="sd">        Boolean array that specifies whether or not a blob group is a hot spot.</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c1"># Cast to numpy arrays for vectorizing distance computation later on</span>
+    <span class="n">x_coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x_coords</span><span class="p">)</span>
+    <span class="n">y_coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y_coords</span><span class="p">)</span>
+    <span class="c1"># Check that x_coords and y_coords are compatiable</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">x_coords</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">y_coords</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;x_coords and y_coords must have the same shape.&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Get number of times each x-y pixel combination occurs</span>
+    <span class="n">centers_list</span> <span class="o">=</span> <span class="p">[(</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">y</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x_coords</span><span class="p">,</span> <span class="n">y_coords</span><span class="p">)]</span>
+    <span class="n">coord_counter</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span><span class="n">centers_list</span><span class="p">)</span>
+    <span class="c1"># Get hot spot coordinates based on number of times x-y coordinates repeat</span>
+    <span class="n">hotspots_coords</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">coord</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">coord_counter</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;=</span> <span class="n">threshold</span><span class="p">:</span>
+            <span class="n">hotspots_coords</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">coord</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_distances</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x1</span><span class="o">-</span><span class="n">x2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">y1</span><span class="o">-</span><span class="n">y2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="c1"># Get mask for events within radius of hot spot</span>
+    <span class="n">is_hot_spot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x_coords</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">x_hot</span><span class="p">,</span> <span class="n">y_hot</span> <span class="ow">in</span> <span class="n">hotspots_coords</span><span class="p">:</span>
+        <span class="n">distances</span> <span class="o">=</span> <span class="n">get_distances</span><span class="p">(</span><span class="n">x_coords</span><span class="p">,</span> <span class="n">y_coords</span><span class="p">,</span> <span class="n">x_hot</span><span class="p">,</span> <span class="n">y_hot</span><span class="p">)</span>
+        <span class="n">is_hot_spot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">is_hot_spot</span><span class="p">,</span> <span class="p">(</span><span class="n">distances</span> <span class="o">&lt;=</span> <span class="n">radius</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">is_hot_spot</span>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Deco team.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

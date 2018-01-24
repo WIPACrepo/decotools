@@ -1,0 +1,354 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>decotools.metrics &mdash; decotools 0.0.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../../genindex.html"/>
+        <link rel="search" title="Search" href="../../search.html"/>
+    <link rel="top" title="decotools 0.0.1 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> decotools
+          
+
+          
+          </a>
+
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">Decotools API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing.html">Contributing</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Useful links</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/WIPACrepo/decotools">decotools &#64; GitHub</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/WIPACrepo/decotools/issues">Issue tracker</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">decotools</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>decotools.metrics</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for decotools.metrics</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">dask</span>
+<span class="kn">from</span> <span class="nn">dask</span> <span class="k">import</span> <span class="n">delayed</span><span class="p">,</span> <span class="n">multiprocessing</span>
+<span class="kn">from</span> <span class="nn">dask.diagnostics</span> <span class="k">import</span> <span class="n">ProgressBar</span>
+<span class="kn">from</span> <span class="nn">.blob_extraction</span> <span class="k">import</span> <span class="n">get_image_array</span>
+
+
+<span class="k">def</span> <span class="nf">_get_image_intensity</span><span class="p">(</span><span class="n">image_file</span><span class="p">,</span> <span class="n">rgb_sum</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Function to calculate intensity metrics</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    image_file : str</span>
+<span class="sd">        Image file to be analyzed.</span>
+<span class="sd">    rgb_sum : bool, optional</span>
+<span class="sd">        Option to use simple RGB sum for grayscale conversion (default is to</span>
+<span class="sd">        use weighted RGB sum).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    intensity_dict : dict</span>
+<span class="sd">        Dictionary with intensity metrics</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">get_image_array</span><span class="p">(</span><span class="n">image_file</span><span class="p">,</span> <span class="n">rgb_sum</span><span class="o">=</span><span class="n">rgb_sum</span><span class="p">)</span>
+    <span class="n">intensity_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;mean&#39;</span><span class="p">:</span> <span class="n">image</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="s1">&#39;max&#39;</span><span class="p">:</span> <span class="n">image</span><span class="o">.</span><span class="n">max</span><span class="p">()}</span>
+    <span class="k">for</span> <span class="n">percentile</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">16</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">84</span><span class="p">]:</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;percentile_</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">percentile</span><span class="p">)</span>
+        <span class="n">intensity_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">percentile</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">intensity_dict</span>
+
+
+<div class="viewcode-block" id="get_intensity_metrics"><a class="viewcode-back" href="../../api.html#decotools.metrics.get_intensity_metrics">[docs]</a><span class="k">def</span> <span class="nf">get_intensity_metrics</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">rgb_sum</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Calculates various metrics related to the image intensity</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    files : str, sequence</span>
+<span class="sd">        Image file path (or sequence of file paths) to be analyzed.</span>
+<span class="sd">    rgb_sum : bool, optional</span>
+<span class="sd">        Option to use simple RGB sum for grayscale conversion (default is to</span>
+<span class="sd">        use weighted RGB sum).</span>
+<span class="sd">    n_jobs : int, optional</span>
+<span class="sd">        The number of jobs to run in parallel (default is 1).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    image_intensities : pandas.DataFrame</span>
+<span class="sd">        DataFrame with intensity metrics</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">files</span><span class="p">]</span>
+
+    <span class="n">image_intensities</span> <span class="o">=</span> <span class="p">[</span><span class="n">delayed</span><span class="p">(</span><span class="n">_get_image_intensity</span><span class="p">)(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">]</span>
+    <span class="n">image_intensities</span> <span class="o">=</span> <span class="n">delayed</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_records</span><span class="p">)(</span><span class="n">image_intensities</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="n">ProgressBar</span><span class="p">():</span>
+        <span class="n">get</span> <span class="o">=</span> <span class="n">dask</span><span class="o">.</span><span class="n">get</span> <span class="k">if</span> <span class="n">n_jobs</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">get</span>
+        <span class="n">image_intensities</span> <span class="o">=</span> <span class="n">image_intensities</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">get</span><span class="o">=</span><span class="n">get</span><span class="p">,</span>
+                                                      <span class="n">num_workers</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">image_intensities</span></div>
+
+
+<span class="k">def</span> <span class="nf">_get_cumulative_hist</span><span class="p">(</span><span class="n">hist</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Calculates cumulative histogram from differential histogram</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    hist : np.array</span>
+<span class="sd">        Differential histogram of an image&#39;s RGB sum values</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    cumulative_hist : np.array</span>
+<span class="sd">        Cumulative histogram of an image&#39;s RGB sum values.</span>
+<span class="sd">        Each bin contains N_pixels &gt; RGB sum value.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">cumulative_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">hist</span><span class="p">)</span>
+    <span class="n">npixels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">hist</span><span class="p">)</span>
+    <span class="n">cdf</span> <span class="o">=</span> <span class="n">cumulative_sum</span> <span class="o">/</span> <span class="n">npixels</span>
+    <span class="n">cumulative_hist</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="n">cdf</span><span class="p">)</span> <span class="o">*</span> <span class="n">npixels</span>
+    <span class="k">return</span> <span class="n">cumulative_hist</span>
+
+
+<div class="viewcode-block" id="get_rgb_hists"><a class="viewcode-back" href="../../api.html#decotools.metrics.get_rgb_hists">[docs]</a><span class="k">def</span> <span class="nf">get_rgb_hists</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">cumulative</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Calculates histograms of the pixel RGB sum distributions</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    files : str, sequence</span>
+<span class="sd">        Image file path (or sequence of file paths) to be analyzed.</span>
+<span class="sd">    cumulative : bool, optional</span>
+<span class="sd">        Option to calculate cumulative histograms. Histogrammed quantities</span>
+<span class="sd">        will be N pixels &gt; threshold.</span>
+<span class="sd">    n_jobs : int, optional</span>
+<span class="sd">        The number of jobs to run in parallel (default is 1).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    hists : pandas.DataFrame</span>
+<span class="sd">        Dataframe containing histograms of pixel RGB sums.</span>
+<span class="sd">        Each row of the Dataframe corresponds to a single image</span>
+<span class="sd">        and each column corresponds to an RGB sum value.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">files</span><span class="p">]</span>
+
+    <span class="c1"># Create integer bins spanning RGB sum values</span>
+    <span class="c1"># np.histogram bins inclusively on the lower bin edge,</span>
+    <span class="c1"># i.e. values within [lower_edge, upper_edge)</span>
+    <span class="n">rgb_max</span> <span class="o">=</span> <span class="mi">256</span><span class="o">*</span><span class="mi">3</span>
+    <span class="n">bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">rgb_max</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">rgb_max</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="c1"># Load images</span>
+    <span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">delayed</span><span class="p">(</span><span class="n">get_image_array</span><span class="p">)(</span><span class="n">f</span><span class="p">,</span> <span class="n">rgb_sum</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">]</span>
+    <span class="c1"># Bin pixel intensities</span>
+    <span class="n">hists</span> <span class="o">=</span> <span class="p">[</span><span class="n">delayed</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">)(</span><span class="n">image</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">bins</span><span class="o">=</span><span class="n">bins</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+             <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">images</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">cumulative</span><span class="p">:</span>
+        <span class="n">hists</span> <span class="o">=</span> <span class="p">[</span><span class="n">delayed</span><span class="p">(</span><span class="n">_get_cumulative_hist</span><span class="p">)(</span><span class="n">hist</span><span class="p">)</span> <span class="k">for</span> <span class="n">hist</span> <span class="ow">in</span> <span class="n">hists</span><span class="p">]</span>
+    <span class="c1"># Create dataframe</span>
+    <span class="n">rgb_hists</span> <span class="o">=</span> <span class="n">delayed</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_records</span><span class="p">)(</span><span class="n">hists</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="n">ProgressBar</span><span class="p">():</span>
+        <span class="n">get</span> <span class="o">=</span> <span class="n">dask</span><span class="o">.</span><span class="n">get</span> <span class="k">if</span> <span class="n">n_jobs</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">get</span>
+        <span class="n">rgb_hists</span> <span class="o">=</span> <span class="n">rgb_hists</span><span class="o">.</span><span class="n">compute</span><span class="p">(</span><span class="n">get</span><span class="o">=</span><span class="n">get</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">rgb_hists</span></div>
+</pre></div>
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Deco team.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
