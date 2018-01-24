@@ -5,8 +5,8 @@ import numpy as np
 from PIL import Image
 import keras
 from keras.models import Sequential, load_model
-from keras.layers import Conv2D, MaxPooling2D, Cropping2D
-from keras.layers import Flatten, Dense, Dropout
+from keras.layers import (Conv2D, MaxPooling2D, Cropping2D, Flatten,
+                          Dense, Dropout)
 from keras.layers.advanced_activations import LeakyReLU
 from keras.constraints import maxnorm
 from keras.utils import to_categorical
@@ -326,8 +326,8 @@ class CNN(object):
                                   verbose=verbose)
 
     def _fit(self, train_images, train_labels, test_images=None,
-             test_labels=None, batch_size=32, seed=None, epochs=10,
-             initial_epoch=0, smooth_factor=None, horizontal_flip=True,
+             test_labels=None, batch_size=64, seed=None, epochs=10,
+             initial_epoch=0, smooth_factor=0.004, horizontal_flip=True,
              vertical_flip=True, width_shift_range=0.08,
              height_shift_range=0.08, rotation_range=180.,
              zoom_range=(0.9, 1.1), fill_mode='constant', cval=0,
@@ -405,8 +405,8 @@ class CNN(object):
         return self
 
     def fit(self, train_images, train_labels, test_images=None,
-            test_labels=None, cv=None, batch_size=32, seed=None, epochs=10,
-            initial_epoch=0, smooth_factor=None, horizontal_flip=True,
+            test_labels=None, cv=None, batch_size=64, seed=None, epochs=10,
+            initial_epoch=0, smooth_factor=0.004, horizontal_flip=True,
             vertical_flip=True, width_shift_range=0.08,
             height_shift_range=0.08, rotation_range=180.,
             zoom_range=(0.9, 1.1), fill_mode='constant', cval=0,
@@ -434,7 +434,7 @@ class CNN(object):
             ``sklearn.model_selection`` can be passed to ``cv`` as well
             (default is None).
         batch_size : int, optional
-            Number of samples per gradient update (default is 32).
+            Number of samples per gradient update (default is 64).
         seed : int, optional
             Random seed to be used for reproducibility. (default is None).
         epochs : int, optional
@@ -447,7 +447,7 @@ class CNN(object):
         smooth_factor : float in range (0, 1), optional
             Level of smoothing to apply to one-hot label vector. Ex.
             smooth_factor of 0.004 applied to [0, 1, 0, 0], results in
-            [0.001, 0.997, 0.001, 0.001] (default is None).
+            [0.001, 0.997, 0.001, 0.001] (default is 0.004).
         horizontal_flip : bool, optional
             Randomly flip inputs horizontally (default is True).
         vertical_flip : bool, optional
