@@ -326,7 +326,7 @@ class CNN(object):
                                   verbose=verbose)
 
     def _fit(self, train_images, train_labels, test_images=None,
-             test_labels=None, batch_size=64, seed=None, epochs=10,
+             test_labels=None, batch_size=64, seed=None, epochs=800,
              initial_epoch=0, smooth_factor=0.004, horizontal_flip=True,
              vertical_flip=True, width_shift_range=0.08,
              height_shift_range=0.08, rotation_range=180.,
@@ -405,7 +405,7 @@ class CNN(object):
         return self
 
     def fit(self, train_images, train_labels, test_images=None,
-            test_labels=None, cv=None, batch_size=64, seed=None, epochs=10,
+            test_labels=None, cv=None, batch_size=64, seed=None, epochs=800,
             initial_epoch=0, smooth_factor=0.004, horizontal_flip=True,
             vertical_flip=True, width_shift_range=0.08,
             height_shift_range=0.08, rotation_range=180.,
@@ -440,7 +440,7 @@ class CNN(object):
         epochs : int, optional
             Number of epochs to train the model. Note that in conjunction with
             initial_epoch, the parameter epochs is to be understood as
-            "final epoch". (default is 10).
+            "final epoch". (default is 800).
         initial_epoch : int, optional
             Epoch at which to start training. Useful for resuming a previous
             training run (default is 0).
